@@ -29,12 +29,17 @@ class SiteTests(unittest.TestCase):
         self.assertNotIn('工序动画尚未接入', text)
         self.assertEqual(text.count('data-phase="'), 5)
         self.assertIn('type="module" src="assets/three/viewer.js"', text)
+        stone = (ROOT / 'chocolate.html').read_text('utf-8')
+        self.assertIn('data-scene="stone-mill"', stone)
+        self.assertIn('研磨动画尚未接入', stone)
+        self.assertNotIn('data-play', stone)
+        self.assertIn('href="#step-3"', stone)
         folder = ROOT / 'assets/three'
         for name in ['viewer.js', 'viewer.css', 'THIRD_PARTY_LICENSES.md']:
             self.assertTrue((folder / name).is_file(), name)
         self.assertTrue(list((folder / 'chunks').glob('*.js')))
         for name in NAMES:
-            if name != 'enrobed':
+            if name not in ('enrobed', 'chocolate'):
                 self.assertNotIn('assets/three/', (ROOT / f'{name}.html').read_text('utf-8'))
 
     def test_content_sources(self):

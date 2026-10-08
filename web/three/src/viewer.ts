@@ -1,16 +1,10 @@
 import { ACESFilmicToneMapping, Color, DirectionalLight, GridHelper, HemisphereLight, LineSegments, Mesh, MeshStandardMaterial, OrthographicCamera, PCFShadowMap, PlaneGeometry, Scene, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createEnrober } from './machines/enrober';
-import type { MachineInstance, ViewerHandle } from './core/types';
-import data from '../generated/enrobed.json';
-import { evaluateScene, TimelinePlayer } from './core/timeline';
-import { createProcessScene } from './scenes/enrobed';
-import { bindProcessControls } from './ui/controls';
-import { flowLabels } from './ui/labels';
+import type { MachineInstance, SceneDefinition, SceneInstance, ViewerHandle } from './core/types';
 
 /** 单一帧循环：播放时刷新；暂停后按需绘制；不可见时保留用户意图并挂起。 */
-export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void): ViewerHandle {
+export function mountViewer(lab: HTMLElement, definition: SceneDefinition, onFailure?: (error: Error) => void): ViewerHandle {
   const host = lab.querySelector<HTMLElement>('[data-canvas-host]')!;
   const pinLayer = lab.querySelector<HTMLElement>('[data-pins]')!;
   const controlsElement = lab.querySelector<HTMLElement>('[data-view-controls]')!;
@@ -22,9 +16,8 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   let renderer: WebGLRenderer | undefined;
   let controls: OrbitControls | undefined;
   let machine: MachineInstance | undefined;
-  let process: ReturnType<typeof createProcessScene> | undefined;
-  let processControls: ReturnType<typeof bindProcessControls> | undefined;
-  const player = new TimelinePlayer();
+  let instance: SceneInstance | undefined;
+  let processControls: ViewerHandle | undefined;
   let disposed = false;
   let frame = 0;
   let visible = true;
@@ -33,7 +26,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   const pins = new Map<string, HTMLButtonElement>();
   const labels = new Map<string, HTMLDivElement>();
   const projected = new Vector3();
-  const centre = new Vector3(0.85, 1.3, 0.12);
+  const centre = new Vector3(...definition.view.centre);
   const partPanel = lab.querySelector<HTMLDetailsElement>('.lab-parts-panel')!;
 
   function on(target: EventTarget, name: string, listener: EventListener) {
@@ -44,14 +37,13 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   function dispose() {
     if (disposed) return;
     disposed = true;
-    player.pause();
+    instance?.animation?.player.pause();
     lab.dataset.playing = 'false';
     cancelAnimationFrame(frame);
     cleanup.forEach(fn => fn());
     controls?.dispose();
     processControls?.dispose();
-    if (process) { scene.remove(process.root); process.dispose(); }
-    if (machine) { scene.remove(machine.root); machine.dispose(); }
+    if (instance) { scene.remove(instance.root); instance.dispose(); }
     scene.traverse(node => {
       if (node instanceof Mesh || node instanceof LineSegments) {
         node.geometry.dispose();
@@ -66,12 +58,9 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     partButtons.forEach(button => { button.disabled = true; button.setAttribute('aria-pressed', 'false'); });
   }
 
-  function updateProcess() {
-    const state = evaluateScene(player.time);
-    process?.applyState(state);
-    machine?.setBeltOffset(state.beltOffset);
-    processControls?.update(state);
-    for (const label of flowLabels(state)) {
+  function updateContent() {
+    instance?.animation?.update();
+    for (const label of instance?.labels ?? []) {
       const element = labels.get(label.id);
       if (element) { if (element.textContent !== label.text) element.textContent = label.text; element.dataset.active = String(label.show); }
     }
@@ -80,8 +69,8 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   function render(timestamp: number) {
     frame = 0;
     if (disposed || !visible || document.hidden || !renderer || !machine) return;
-    player.advance(timestamp);
-    updateProcess();
+    instance?.animation?.player.advance(timestamp);
+    updateContent();
     renderer.render(scene, camera);
     const width = host.clientWidth, height = host.clientHeight;
     for (const [id, button] of pins) {
@@ -93,9 +82,9 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
       button.style.top = `${y}px`;
     }
     const placed: { left: number; right: number; top: number; bottom: number }[] = [];
-    if (process) for (const id of ['product', 'cooling', 'chocolateInput', 'coreInput', 'coating', 'recovery']) {
-      const element = labels.get(id)!;
-      projected.copy(process.anchors[id as keyof typeof process.anchors]).project(camera);
+    if (instance) for (const label of instance.labels) {
+      const element = labels.get(label.id)!;
+      projected.copy(label.anchor).applyMatrix4(instance.root.matrixWorld).project(camera);
       const x = (projected.x * 0.5 + 0.5) * width;
       let y = (-projected.y * 0.5 + 0.5) * height;
       element.hidden = element.dataset.active !== 'true' || projected.z < -1 || projected.z > 1 || y < 10 || y > height - 35 || x < 0 || x > width;
@@ -120,7 +109,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     renderer.domElement.dataset.zoom = camera.zoom.toFixed(3);
     renderer.domElement.dataset.geometries = String(renderer.info.memory.geometries);
     renderer.domElement.dataset.textures = String(renderer.info.memory.textures);
-    if (player.playing) requestRender();
+    if (instance?.animation?.player.playing) requestRender();
   }
 
   function requestRender() {
@@ -132,7 +121,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     const width = host.clientWidth, height = host.clientHeight;
     if (width <= 0 || height <= 0) return;
     const aspect = width / height;
-    const viewHeight = Math.max(4.25, 7.5 / aspect);
+    const viewHeight = Math.max(definition.view.minHeight, definition.view.minWidth / aspect);
     camera.left = -viewHeight * aspect / 2;
     camera.right = viewHeight * aspect / 2;
     camera.top = viewHeight / 2;
@@ -163,7 +152,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   }
 
   function selectPart(id: string) {
-    const part = data.parts.find(p => p.id === id);
+    const part = definition.parts.find(p => p.id === id);
     if (!part) return;
     partPanel.open = true;
     machine?.selectPart(id);
@@ -186,7 +175,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     renderer.shadowMap.type = PCFShadowMap;
     renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute('role', 'img');
-    renderer.domElement.setAttribute('aria-label', '巧克力涂层工序互动模型。拖动或方向键旋转，加减键缩放。使用画布下方按钮播放、暂停或逐步查看；工序文字在讲解栏同步显示。');
+    renderer.domElement.setAttribute('aria-label', definition.description);
     host.append(renderer.domElement);
     [host, pinLayer, controlsElement, legend, gesture].forEach(element => { element.hidden = false; });
 
@@ -204,24 +193,24 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
 
     const floor = new Mesh(new PlaneGeometry(100, 100), new MeshStandardMaterial({ color: 0xeee9de, roughness: 1 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = -0.18; floor.receiveShadow = true; scene.add(floor);
-    const plinth = new Mesh(new RoundedBoxGeometry(7.45, 0.15, 2.42, 3, 0.07), new MeshStandardMaterial({ color: 0xd8cbb4, roughness: 0.85 }));
-    plinth.position.set(1, -0.08, 0.16); plinth.castShadow = true; plinth.receiveShadow = true; scene.add(plinth);
+    const plinth = new Mesh(new RoundedBoxGeometry(...definition.view.platformSize, 3, 0.07), new MeshStandardMaterial({ color: 0xd8cbb4, roughness: 0.85 }));
+    plinth.position.set(definition.view.platformX, -0.08, 0.16); plinth.castShadow = true; plinth.receiveShadow = true; scene.add(plinth);
     const grid = new GridHelper(14, 28, 0xd9d3c4, 0xd9d3c4);
     grid.material.transparent = true;
     grid.material.opacity = 0.4;
     grid.position.y = -0.176;
     scene.add(grid);
-    machine = createEnrober(); scene.add(machine.root);
-    machine.setView('working'); lab.dataset.mode = 'working';
-    process = createProcessScene(); scene.add(process.root);
-    processControls = bindProcessControls(lab, player, () => { updateProcess(); requestRender(); });
-    for (const label of flowLabels(evaluateScene(0))) {
+    instance = definition.create(); machine = instance.machine; scene.add(instance.root);
+    machine.setView(definition.initialMode); lab.dataset.mode = definition.initialMode;
+    lab.dataset.playing = 'false';
+    processControls = instance.animation?.bindControls(lab, () => { updateContent(); requestRender(); });
+    for (const label of instance.labels) {
       const element = document.createElement('div'); element.className = `lab-flow-label lab-flow-${label.id}`;
       element.setAttribute('aria-hidden', 'true'); labels.set(label.id, element); pinLayer.append(element);
     }
     on(partPanel, 'toggle', requestRender);
     lab.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button => {
-      button.setAttribute('aria-pressed', String(button.dataset.mode === 'working'));
+      button.setAttribute('aria-pressed', String(button.dataset.mode === definition.initialMode));
       on(button, 'click', () => {
         const mode = button.dataset.mode as 'working' | 'exterior';
         machine?.setView(mode); lab.dataset.mode = mode;
@@ -243,7 +232,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     cleanup.push(() => controls?.removeEventListener('change', requestRender));
     controls.addEventListener('start', () => lab.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', 'false')));
 
-    for (const part of data.parts) {
+    for (const part of definition.parts) {
       const button = document.createElement('button');
       button.className = 'lab-pin'; button.type = 'button'; button.textContent = part.number;
       button.setAttribute('aria-label', `查看${part.name}`); button.setAttribute('aria-pressed', 'false');
@@ -271,9 +260,10 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
       event.preventDefault(); dispose(); onFailure?.(new Error('WebGL 上下文已丢失，可重新加载模型。'));
     });
     function updateVisibility() {
-      player.setSuspended(!visible || document.hidden);
-      if (player.suspended) { cancelAnimationFrame(frame); frame = 0; }
-      updateProcess(); requestRender();
+      const suspended = !visible || document.hidden;
+      instance?.animation?.player.setSuspended(suspended);
+      if (suspended) { cancelAnimationFrame(frame); frame = 0; }
+      updateContent(); requestRender();
     }
     on(document, 'visibilitychange', updateVisibility);
     const observer = new ResizeObserver(resize); observer.observe(host); cleanup.push(() => observer.disconnect());

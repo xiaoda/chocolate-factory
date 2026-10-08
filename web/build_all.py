@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import sys
 
-from export_scene_data import export_scene
+from export_scene_data import export_scenes
 from build import build_site
 
 HERE = Path(__file__).resolve().parent
@@ -30,7 +30,8 @@ def frontend_commands():
 def main():
     if not (FRONTEND / 'node_modules/vite').is_dir():
         raise RuntimeError('前端依赖尚未准备，请运行 npm --prefix web/three ci。')
-    print(f'场景数据：{export_scene()}', flush=True)
+    for path in export_scenes():
+        print(f'场景数据：{path}', flush=True)
     for label, command in frontend_commands():
         print(f'{label}…', flush=True)
         result = subprocess.run(command, cwd=FRONTEND, capture_output=True, text=True, encoding='utf-8',

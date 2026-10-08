@@ -37,3 +37,24 @@ PHASE_CAPTIONS = {
 }
 for phase in ENROBED_SCENE['phases']:
     phase['caption'] = dict(zip(('input', 'action', 'output', 'note'), PHASE_CAPTIONS[phase['id']]))
+
+STONE_MILL_SCENE = {
+    'id': 'stone-mill', 'pageSlug': 'chocolate', 'schemaVersion': 1,
+    'status': 'static-prototype', 'name': '石磨机', 'duration': 0, 'phases': [],
+    'stepIds': ['nib-grinding'],
+    'photos': {'machine': 'assets/photos/10.jpg', 'plate': 'assets/photos/11.jpg'},
+    'boundary': '外形参照实拍 10／11；尺寸、背面和隐藏机构为简化示意。投料区域仅作提示，具体出料口、取料方式及石辊转向待核实。本版没有研磨动画，不把前侧机构认定为出料阀，也不演示压榨制粉。',
+    'parts': [
+        {'id': 'bowl', 'number': '01', 'name': '开口圆盘与盘壁', 'evidence': 'photo', 'refs': ['icco'],
+         'description': '照片可见开口圆盘包围两只石辊。上方开口仅作为投料区示意；“工作区域示意”可隐藏前半盘壁，便于观察，不表示真实机器能这样拆开。'},
+        {'id': 'stones', 'number': '02', 'name': '双石辊与接触区', 'evidence': 'photo', 'refs': ['icco'],
+         'description': '保留两只浅色厚石辊和水平连接轴的辨识特征。研磨原理在正文说明；本轮不推定石辊、料盘各自的转向或速度。'},
+        {'id': 'bridge', 'number': '03', 'name': '横梁、立柱与手柄', 'evidence': 'photo', 'refs': ['icco'],
+         'description': '上方浅色横梁、棕色立柱、左侧手柄与中心连接参照照片简化。调节机构的内部结构和操作功能尚未核实，不将手柄做成可操作的生产控制。'},
+        {'id': 'drive', 'number': '04', 'name': '底座与侧面机构', 'evidence': 'photo', 'refs': ['icco'],
+         'description': '保留底座、左侧传动外形和前侧可见机构；不从外观推断隐藏齿轮。具体出料口和取料方式待核实，不补造出口或料流。'},
+    ],
+}
+
+SCENES = {scene['id']: scene for scene in (ENROBED_SCENE, STONE_MILL_SCENE)}
+PAGE_SCENES = {'enrobed': 'enrobed', 'chocolate': 'stone-mill'}

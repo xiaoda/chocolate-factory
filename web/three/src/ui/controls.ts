@@ -1,15 +1,14 @@
-import data from '../../generated/enrobed.json';
-import { DURATION, TimelinePlayer } from '../core/timeline';
-import type { SceneState } from '../core/timeline';
-import { productLabel } from './labels';
+import { TimelinePlayer } from '../core/playback';
+import type { PhaseState, ProcessData } from '../core/types';
 
 const clockText = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
 const setText = (element: HTMLElement, text: string) => { if (element.textContent !== text) element.textContent = text; };
 
-export function bindProcessControls(lab: HTMLElement, player: TimelinePlayer, onChange: () => void) {
+export function bindProcessControls<T extends PhaseState>(lab: HTMLElement, player: TimelinePlayer, onChange: () => void, data: ProcessData, describe: (state: T) => string) {
   const region = lab.querySelector<HTMLElement>('[data-playback]')!;
   const play = lab.querySelector<HTMLButtonElement>('[data-play]')!;
   const slider = lab.querySelector<HTMLInputElement>('[data-seek]')!;
+  slider.max = String(data.duration);
   const time = lab.querySelector<HTMLElement>('[data-time]')!;
   const buttons = [...lab.querySelectorAll<HTMLButtonElement>('[data-phase]')];
   const listeners: (() => void)[] = [];
@@ -35,17 +34,17 @@ export function bindProcessControls(lab: HTMLElement, player: TimelinePlayer, on
   motionHint.hidden = !motion.matches;
   on(motion, 'change', updateMotion);
   return {
-    update(state: SceneState) {
+    update(state: T) {
       const phase = data.phases[state.phaseIndex];
-      setText(play, player.playing ? 'Ⅱ 暂停' : state.time === DURATION ? '↺ 再看一遍' : '▶ 播放工序');
+      setText(play, player.playing ? 'Ⅱ 暂停' : state.time === data.duration ? '↺ 再看一遍' : '▶ 播放工序');
       play.setAttribute('aria-pressed', String(player.playing));
       slider.value = String(state.time);
       slider.setAttribute('aria-valuetext', `教学进度 ${clockText(state.time)}，${phase.title}`);
-      setText(time, `${clockText(state.time)} / ${clockText(DURATION)}`);
+      setText(time, `${clockText(state.time)} / ${clockText(data.duration)}`);
       lab.dataset.time = state.time.toFixed(3);
       lab.dataset.playing = String(player.playing);
       lab.dataset.suspended = String(player.suspended);
-      setText(lab.querySelector<HTMLElement>('[data-product-state]')!, productLabel(state));
+      setText(lab.querySelector<HTMLElement>('[data-product-state]')!, describe(state));
       if (currentPhase === state.phaseIndex) return;
       currentPhase = state.phaseIndex;
       lab.dataset.phase = state.phaseId;
@@ -58,7 +57,7 @@ export function bindProcessControls(lab: HTMLElement, player: TimelinePlayer, on
       references.replaceChildren();
       phase.stepIds.forEach(id => {
         const index = data.steps.findIndex(step => step.id === id);
-        const link = document.createElement('a'); link.href = `#step-${index + 1}`; link.textContent = `${data.steps[index].label} ↗`; references.append(link);
+        const link = document.createElement('a'); link.href = `#step-${data.steps[index].number}`; link.textContent = `${data.steps[index].label} ↗`; references.append(link);
       });
     },
     dispose() { listeners.forEach(fn => fn()); region.hidden = true; },

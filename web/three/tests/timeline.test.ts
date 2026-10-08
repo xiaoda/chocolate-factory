@@ -1,5 +1,6 @@
+import { TimelinePlayer } from '../src/core/playback';
 import { describe, expect, it } from 'vitest';
-import { evaluateScene, TimelinePlayer, DURATION } from '../src/core/timeline';
+import { evaluateScene, DURATION } from '../src/core/timeline';
 
 describe('确定性工序时间轴', () => {
   it('阶段边界唯一，首尾和非法输入均受约束', () => {
@@ -38,7 +39,7 @@ describe('确定性工序时间轴', () => {
 
 describe('播放意图与临时挂起', () => {
   it('默认不播放，暂停后稳定；跳转不会累计旧帧时差', () => {
-    const p = new TimelinePlayer();
+    const p = new TimelinePlayer(DURATION);
     p.advance(1000); expect(p.time).toBe(0);
     p.play(); p.advance(2000); p.advance(3000); expect(p.time).toBe(1);
     p.pause(); p.advance(10000); expect(p.time).toBe(1);
@@ -46,14 +47,14 @@ describe('播放意图与临时挂起', () => {
     p.seek(5); p.advance(30000); expect(p.time).toBe(5);
   });
   it('离屏挂起不改变用户意图，用户暂停后不能自动恢复', () => {
-    const p = new TimelinePlayer(); p.play(); p.advance(0); p.advance(1000);
+    const p = new TimelinePlayer(DURATION); p.play(); p.advance(0); p.advance(1000);
     p.setSuspended(true); p.advance(100000); expect(p.time).toBe(1); expect(p.playing).toBe(true);
     p.setSuspended(false); p.advance(110000); p.advance(111000); expect(p.time).toBe(2);
     p.setSuspended(true); p.pause(); p.setSuspended(false); p.advance(120000);
     expect(p.playing).toBe(false); expect(p.time).toBe(2);
   });
   it('播完停止，不自动循环；重播和结束后播放从头开始', () => {
-    const p = new TimelinePlayer(); p.seek(74); p.play(); p.advance(0); p.advance(3000);
+    const p = new TimelinePlayer(DURATION); p.seek(74); p.play(); p.advance(0); p.advance(3000);
     expect(p.time).toBe(75); expect(p.playing).toBe(false);
     p.advance(4000); expect(p.time).toBe(75);
     p.play(); expect(p.time).toBe(0); expect(p.playing).toBe(true);

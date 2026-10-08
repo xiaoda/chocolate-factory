@@ -5,6 +5,7 @@ import shutil
 import struct
 import argparse
 from three_markup import render_equipment_lab
+from scene_content import PAGE_SCENES
 from content import PAGES, SOURCES, REFERENCES
 
 HERE = Path(__file__).resolve().parent
@@ -107,8 +108,8 @@ def detail(page, idx, with_3d=False):
     nex = PAGES[(idx+1) % len(PAGES)]
     prevlink = f'<a href="{prev["slug"]}.html">← 上一篇 · {prev["name"]}</a>' if prev else '<a href="index.html">← 返回工艺总览</a>'
     badge = '巧克力工艺' if page['category']=='chocolate' else '糖果工艺'
-    enhanced = with_3d and slug == 'enrobed'
-    lab = render_equipment_lab() if enhanced else ''
+    enhanced = with_3d and slug in PAGE_SCENES
+    lab = render_equipment_lab(PAGE_SCENES[slug]) if enhanced else ''
     return head(name,page['summary'], enhanced) + f'''
 <main id="main"><div class="wrap"><div class="breadcrumb"><a href="index.html">工艺总览</a><span>/</span><span>{idx+1:02} · {name}</span><button class="print-button" type="button" data-print>打印本页 ↗</button></div>
 <section class="detail-hero"><div class="hero-copy"><div class="eyebrow accent">工艺笔记 {idx+1:02} / {badge}</div><p class="product-label">{name} <span>— {page['kicker']}</span></p><h1>{page['title']}</h1><p class="lede">{page['summary']}</p><a class="button" href="#process">先看流程 <span aria-hidden="true">↓</span></a><span class="readtime">约 {page['minutes']} 分钟读懂</span></div>{figure(page['hero'],page['hero_caption'],hero=True)}</section>
@@ -148,7 +149,7 @@ def build_site(with_3d=False):
     for ref in REFERENCES.values():
         manifest += f'- `dist/assets/reference/{ref["file"]}`：{ref["title"]}；作者：{ref["author"]}；许可：{ref["license"]}；[原始文件与许可说明]({ref["url"]})。\n'
     if with_3d:
-        manifest += '\n## 3D 互动工序样板\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
+        manifest += '\n## 3D 设备观察室\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。石磨机模型由 `web/three/src/machines/stone-mill.ts` 生成，以照片 10／11 为造型参考；本版为静态结构样板，不补造出料口或隐藏传动。两场景共享查看器，未使用新增第三方图片或模型。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
     (HERE / 'ASSETS.md').write_text(manifest,encoding='utf-8')
     print(f'已生成 {len(PAGES)+1} 个 HTML；使用 {len(MANIFEST)} 张实拍。')
 

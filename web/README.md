@@ -46,9 +46,9 @@ python -X utf8 web/start_preview.py --stop
 
 ## 修改与重建
 
-### 涂层机 3D 互动工序样板
+### 3D 设备观察室
 
-本地 HTTP 预览打开 `enrobed.html#equipment-3d`，点击“加载 3D 模型”，再主动播放。V0.2 支持 75 秒工序讲解、暂停/重播/拖动进度、五个阶段关键帧、工作部件/完整外观切换，以及原有旋转、缩放、部件说明和实拍对照。冷却段和回流路径是补充原理示意，教学时间不对应真实加工时间。完整构建：
+本地 HTTP 预览打开 `enrobed.html#equipment-3d`，点击“加载 3D 模型”，再主动播放。V0.2 支持 75 秒工序讲解、暂停/重播/拖动进度、五个阶段关键帧、工作部件/完整外观切换，以及原有旋转、缩放、部件说明和实拍对照。冷却段和回流路径是补充原理示意，教学时间不对应真实加工时间。V0.3 在 `chocolate.html#equipment-3d` 新增石磨机静态样板：四组部件高亮、工作区域示意、实拍 10／11 对照和正文第三步链接；本轮没有研磨动画，不虚构出料口。两台设备复用查看器与资源管理，按场景懒加载。完整构建：
 
 ```powershell
 npm --prefix web/three ci
@@ -58,7 +58,7 @@ npm --prefix web/three run test
 python -X utf8 web/test_site.py
 ```
 
-源代码、技术边界、锁定版本和验证说明见 [`three/README.md`](three/README.md) 与 [`three/验收记录.md`](three/验收记录.md)。3D 运行依赖已本地打包，不需要联网；安装开发依赖需要网络。直接双击 HTML 时保留图文阅读，3D 请改用本地 HTTP。原有 ZIP 尚未更新。
+源代码、技术边界、锁定版本和验证说明见 [`three/README.md`](three/README.md) 、[`three/石磨机验收记录.md`](three/石磨机验收记录.md) 与涂层机历史 [`three/验收记录.md`](three/验收记录.md)。3D 运行依赖已本地打包，不需要联网；安装开发依赖需要网络。直接双击 HTML 时保留图文阅读，3D 请改用本地 HTTP。原有 ZIP 尚未更新。
 
 ### 原有图文构建
 

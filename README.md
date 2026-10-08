@@ -24,7 +24,9 @@ python -X utf8 web/start_preview.py --stop
 
 涂层巧克力页新增“设备观察室”：打开本地预览地址下的 `enrobed.html#equipment-3d`，点击“加载 3D 模型”，再点“播放工序”。75 秒教学动画展示两路输入、淋涂与底涂、控量回收、独立冷却及输出对照。支持暂停、重播、进度拖动、工序关键帧，以及旋转、缩放、部件说明和实拍对照。
 
-当前为 V0.2 单设备互动样板，默认不自动播放。**冷却段及回流路径为原理示意，75 秒不是实际加工时长。** 没有使用 Blender，也没有上传照片。运行素材随网页本地打包，3D 需通过 HTTP 预览，不能保证直接双击 HTML 可用；图文仍可直接离线阅读。
+V0.3 新增石磨机静态样板：打开 `chocolate.html#equipment-3d`，可旋转、缩放、查看四组部件、切换完整外观与工作区域示意，并对照照片 10／11。研磨动画尚未接入；出料方式和石辊转向待核实。两台设备共享查看器，但只加载当前设备模块。
+
+涂层机保留已确认的 V0.2 工序动画，默认不自动播放。**冷却段及回流路径为原理示意，75 秒不是实际加工时长。** 没有使用 Blender，也没有上传照片。运行素材随网页本地打包，3D 需通过 HTTP 预览，不能保证直接双击 HTML 可用；图文仍可直接离线阅读。
 
 ## 修改与验证
 
@@ -58,7 +60,7 @@ python -X utf8 web/test_site.py
 
 更多说明见 [`web/README.md`](web/README.md)，图片作者及许可见 [`web/ASSETS.md`](web/ASSETS.md)。预览日志、运行信息、Python 缓存和 ZIP 分发包不纳入版本控制。
 
-3D 样板的运行与维护见 [`web/three/README.md`](web/three/README.md)，本批验收见 [`web/three/验收记录.md`](web/three/验收记录.md)。根目录原有 ZIP 未在本批更新，不包含本次样板。
+3D 样板的运行与维护见 [`web/three/README.md`](web/three/README.md)，石磨机与公共底座验收见 [`web/three/石磨机验收记录.md`](web/three/石磨机验收记录.md)，涂层机历史记录见 [`web/three/验收记录.md`](web/three/验收记录.md)。根目录原有 ZIP 未在本批更新，不包含本次样板。
 
 ## 资料边界
 

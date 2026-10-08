@@ -1,4 +1,5 @@
 import './viewer.css';
+import { loadScene } from './registry';
 import type { ViewerHandle } from './core/types';
 
 const lab = document.querySelector<HTMLElement>('[data-equipment-lab]');
@@ -43,13 +44,13 @@ if (lab) {
     button.textContent = '正在准备模型…';
     status.textContent = '正在加载本地 3D 模块，不会上传照片。';
     try {
-      const { mountViewer } = await import('./viewer');
+      const [{ mountViewer }, definition] = await Promise.all([import('./viewer'), loadScene(lab.dataset.scene ?? '')]);
       if (currentGeneration !== generation) return;
-      viewer = mountViewer(lab, showFailure);
+      viewer = mountViewer(lab, definition, showFailure);
       lab.dataset.state = 'ready';
       lab.querySelector<HTMLElement>('[data-placeholder]')!.hidden = true;
       lab.querySelector<HTMLCanvasElement>('canvas')?.focus({ preventScroll: true });
-      status.textContent = '模型已就绪。点击“播放工序”，或点任一步查看关键帧；可随时暂停旋转。';
+      status.textContent = definition.readyMessage;
     } catch (error) {
       if (currentGeneration === generation) showFailure(error);
     } finally {

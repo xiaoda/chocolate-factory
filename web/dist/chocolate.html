@@ -2,7 +2,7 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="风味靠发酵、烘焙与精炼建立；细腻靠精磨；光泽、脆感和脱模表现，则与调温和冷却有关。先看懂这条主线，再看各种产品怎样分流。"><meta name="theme-color" content="#38251e">
 <title>基础巧克力 · 可可工艺笔记</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>
+<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script><link rel="stylesheet" href="assets/three/viewer.css"><script type="module" src="assets/three/viewer.js"></script></head><body>
 <a class="skip" href="#main">跳到正文</a><div class="reading-track" aria-hidden="true"><div id="reading-progress"></div></div>
 <header class="site-header"><div class="header-inner"><a class="brand" href="index.html" aria-label="可可工艺笔记首页"><span class="brand-mark" aria-hidden="true">可</span><span>可可工艺笔记<small>从博物馆，看懂制造</small></span></a>
 <nav aria-label="主导航"><a href="index.html#collection">工艺目录 <span aria-hidden="true">↗</span></a><a href="index.html#about">阅读说明</a></nav><span class="edition">参观照片图解 / 01</span></div></header>
@@ -12,6 +12,53 @@
     <figcaption>五辊机 · 将混合料中的固体颗粒进一步磨细</figcaption></figure></section>
 <div class="material-strip"><div><span>从什么开始</span><strong>可可原料、糖、可可脂；奶巧另加奶粉</strong></div><div><span>最后得到什么</span><strong>可供成型或涂层的基料，以及实心巧克力</strong></div><div><span>一句话原理</span><strong>把颗粒磨细，让脂肪有序结晶</strong></div></div>
 <section class="process-summary" id="process"><div class="section-heading"><div><p class="eyebrow accent">先把顺序记住</p><h2>一眼看懂流程</h2></div><p>点击任一步，跳到图文解释 ↓</p></div><ol class="flow-list"><li><a href="#step-1"><span>01</span>采收 · 发酵 · 干燥</a></li><li><a href="#step-2"><span>02</span>烘焙 · 破碎 · 风选</a></li><li><a href="#step-3"><span>03</span>初步研磨</a></li><li><a href="#step-4"><span>04</span>混合 · 五辊精磨</a></li><li><a href="#step-5"><span>05</span>精炼 · 标准化 · 保温</a></li><li><a href="#step-6"><span>06</span>可可脂预结晶</a></li><li><a href="#step-7"><span>07</span>成型 · 冷却</a></li><li><a href="#step-8"><span>08</span>包装 · 储运</a></li></ol><p class="boundary"><strong>这张流程图的边界</strong>本页采用整豆烘焙、辊式精磨的典型路线；也存在先去壳后烘焙的路线。采购成品巧克力再加工的工厂，不必自己完成所有上游步骤。</p></section>
+
+<section id="equipment-3d" class="equipment-lab" aria-labelledby="lab-title" data-equipment-lab data-scene="stone-mill" data-state="idle">
+  <header class="lab-heading">
+    <div><p class="lab-kicker">设备观察室 <span>／ 02</span></p><h2 id="lab-title">两只石辊，一盘可可的变化。</h2><p class="lab-subtitle">先看清设备结构，再讲研磨如何发生。</p></div>
+    <span class="lab-edition">静态造型样板 <b>V0.3</b></span>
+  </header>
+  <div class="lab-shell">
+    <div class="lab-workspace">
+      <div class="lab-topline"><span><i aria-hidden="true"></i> 程序化模型 · 非精密复刻</span><span>参照实拍 10 / 11</span></div>
+      <div class="lab-stage" data-stage>
+        <div class="lab-placeholder" data-placeholder>
+          <img src="assets/photos/10.jpg" width="1280" height="1707" alt="石磨机原始实拍，作为三维模型的造型依据" loading="lazy">
+          <div class="lab-placeholder-copy"><span class="lab-preview-tag">从设备实拍，到结构观察</span><h3>圆盘之上，<br>认识一台石磨机。</h3><p>转动、放大，点选四组部件。<br>本轮先看造型，研磨动画尚未接入。</p><button class="lab-primary" type="button" data-load disabled>加载 3D 模型 <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div class="lab-canvas-host" data-canvas-host hidden></div>
+        <div class="lab-pins" data-pins hidden></div>
+        <div class="lab-stage-legend" data-stage-legend hidden><span>投料区：位置示意</span><span>出料方式待核实 · 暂无动画</span></div>
+      </div>
+
+      <div class="lab-tools" data-view-controls hidden>
+        <div class="lab-modes" aria-label="设备展示方式"><button type="button" data-mode="working" aria-pressed="false">工作区域示意</button><button type="button" data-mode="exterior" aria-pressed="true">完整外观</button></div>
+        <div class="lab-views" aria-label="选择观察角度">
+          <button type="button" data-view="perspective" aria-pressed="true">立体</button>
+          <button type="button" data-view="front" aria-pressed="false">正面</button>
+          <button type="button" data-view="top" aria-pressed="false">俯视</button>
+        </div>
+        <div class="lab-zoom"><button type="button" data-zoom="in" aria-label="放大模型">＋</button><button type="button" data-zoom="out" aria-label="缩小模型">−</button><button type="button" data-reset>复位视角</button></div>
+      </div>
+      <p class="lab-gesture" data-gesture hidden>拖动旋转 · 滚轮 / 双指缩放 · 画布内方向键旋转、＋ / − 缩放</p>
+      <p class="lab-status" role="status" aria-live="polite" data-status>点击后加载本地模型；3D 需通过 HTTP 预览，直接双击 HTML 时请阅读图文。</p>
+    </div>
+    <aside class="lab-inspector" aria-label="工序讲解、部件说明与实拍对照">
+
+      <div class="lab-inspector-heading"><span>结构观察</span><span class="lab-tiny-number">01—04</span></div>
+      <section class="lab-narration lab-static-note"><h3>先认识机器，<br>再进入研磨。</h3><p class="lab-caption-note">本版为静态造型样板，研磨动画尚未接入。投料区仅作位置提示，暂不演示石辊转向或出料路径。</p><div class="lab-phase-references"><a href="#step-3">正文第 3 步 · 初步研磨 ↙</a></div></section>
+
+      <details class="lab-parts-panel" open><summary>设备部件与实拍对照 <span>04</span></summary>
+      <div class="lab-part-list" aria-label="选择设备部件"><button type="button" class="lab-part" data-part="bowl" aria-pressed="false" disabled><span>01</span>开口圆盘与盘壁</button><button type="button" class="lab-part" data-part="stones" aria-pressed="false" disabled><span>02</span>双石辊与接触区</button><button type="button" class="lab-part" data-part="bridge" aria-pressed="false" disabled><span>03</span>横梁、立柱与手柄</button><button type="button" class="lab-part" data-part="drive" aria-pressed="false" disabled><span>04</span>底座与侧面机构</button></div>
+      <div class="lab-part-detail" aria-live="polite"><p class="lab-detail-tag" data-part-tag>外观参照实拍</p><h3 data-part-title>保留辨识度，省略繁琐细节。</h3><p data-part-description>开口圆盘、双石辊、横梁与侧面机构参照实拍简化。点编号看部件；“工作区域示意”隐藏前盘壁，便于观察接触区，不表示真实设备可这样拆开。</p></div>
+      </details>
+      <figure class="lab-reference"><a href="assets/photos/10.jpg" data-lightbox data-caption="石磨机实拍 · 照片 10；模型为简化造型，不是精密复刻。"><img src="assets/photos/10.jpg" width="1280" height="1707" alt="模型对应的石磨机实拍照片 10" loading="lazy"><span>实拍对照 <b aria-hidden="true">↗</b></span></a><figcaption><a href="assets/photos/11.jpg" data-lightbox data-caption="石磨机说明牌 · 照片 11">阅读展牌 11 ↗</a><button type="button" data-compare aria-pressed="false" disabled>放大对照</button></figcaption></figure>
+    </aside>
+  </div>
+  <div class="lab-materials"><div><span>典型研磨输入</span><strong>经过焙炒、破碎脱壳的可可碎粒</strong></div><span class="lab-material-arrow" aria-hidden="true">→</span><div><span>典型研磨结果</span><strong>可可浆／可可液块，并非脱脂可可粉</strong></div><span class="lab-material-arrow" aria-hidden="true">→</span><div><span>这台展品的边界</span><strong>具体出料口、取料方式待核实</strong></div></div>
+  <p class="lab-boundary"><span>模型边界</span> 外形参照实拍 10／11；尺寸、背面和隐藏机构为简化示意。投料区域仅作提示，具体出料口、取料方式及石辊转向待核实。本版没有研磨动画，不把前侧机构认定为出料阀，也不演示压榨制粉。</p>
+  <noscript><p class="lab-noscript">3D 需要 JavaScript；设备照片、展牌和下方全部工艺正文仍可阅读。</p></noscript>
+</section>
 <div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a><a href="#step-1"><span>01</span>采收 · 发酵 · 干燥</a><a href="#step-2"><span>02</span>烘焙 · 破碎 · 风选</a><a href="#step-3"><span>03</span>初步研磨</a><a href="#step-4"><span>04</span>混合 · 五辊精磨</a><a href="#step-5"><span>05</span>精炼 · 标准化 · 保温</a><a href="#step-6"><span>06</span>可可脂预结晶</a><a href="#step-7"><span>07</span>成型 · 冷却</a><a href="#step-8"><span>08</span>包装 · 储运</a><a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
 <div class="article-body"><section id="steps"><div class="section-heading"><div><p class="eyebrow accent">跟着物料走一遍</p><h2>每一步，发生了什么？</h2></div></div><section class="step has-photo" id="step-1" aria-labelledby="step-title-1">
         <div class="step-number">01</div><div class="step-copy"><div class="eyebrow">采收 · 发酵 · 干燥 <span class="evidence">资料补全</span></div><h3 id="step-title-1">先在产地建立风味基础</h3>

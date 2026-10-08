@@ -37,23 +37,3 @@ export function evaluateScene(seconds: number): SceneState {
     beltOffset: ((x + 1.5) % (3.54 / 93)),
   };
 }
-
-/** playing 是用户意图；suspended 是页面暂不可见，两者不能混为一谈。 */
-export class TimelinePlayer {
-  time = 0;
-  playing = false;
-  suspended = false;
-  private previous: number | null = null;
-  play() { if (this.time >= DURATION) this.time = 0; this.playing = true; this.previous = null; }
-  pause() { this.playing = false; this.previous = null; }
-  restart() { this.time = 0; this.play(); }
-  seek(seconds: number) { this.time = timeInRange(seconds); this.previous = null; if (this.time === DURATION) this.pause(); }
-  setSuspended(value: boolean) { if (value !== this.suspended) this.previous = null; this.suspended = value; }
-  advance(timestamp: number) {
-    if (!Number.isFinite(timestamp)) return;
-    if (!this.playing || this.suspended) { this.previous = null; return; }
-    if (this.previous !== null) this.time = Math.min(DURATION, this.time + Math.max(0, timestamp - this.previous) / 1000);
-    this.previous = timestamp;
-    if (this.time === DURATION) this.pause();
-  }
-}

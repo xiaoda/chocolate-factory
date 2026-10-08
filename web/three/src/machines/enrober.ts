@@ -1,12 +1,12 @@
-import { BoxGeometry, CylinderGeometry, Group, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Quaternion, TorusGeometry, Vector3 } from 'three';
-import type { BufferGeometry, Material } from 'three';
+import { BoxGeometry, CylinderGeometry, Group, InstancedMesh, Matrix4, Mesh, Quaternion, TorusGeometry, Vector3 } from 'three';
 import { createMaterials } from '../geometry/materials';
 import { box, cylinder, pipe } from '../geometry/primitives';
-import type { MachineInstance } from '../core/types';
+import type { EnroberInstance } from '../core/types';
+import { machineResources } from '../core/machine-resources';
 import { batchStaticMeshes } from '../geometry/batch';
 
 /** 比例来自照片观察，不表示精确测量。未展示真实隐藏机构。 */
-export function createEnrober(): MachineInstance {
+export function createEnrober(): EnroberInstance {
   const root = new Group();
   root.name = 'enroberRoot';
   const m = createMaterials();
@@ -103,30 +103,7 @@ export function createEnrober(): MachineInstance {
   blowerGuide.add(rings);
   Object.values(parts).forEach(part => batchStaticMeshes(part, new Set(cutaway)));
 
-  let disposed = false;
-  const highlighted = new Map<Mesh, Material | Material[]>();
-  function selectPart(id: string | null) {
-    for (const [mesh, original] of highlighted) {
-      const temporary = mesh.material;
-      (Array.isArray(temporary) ? temporary : [temporary]).forEach(material => material.dispose());
-      mesh.material = original;
-    }
-    highlighted.clear();
-    if (disposed || !id || !parts[id]) return;
-    parts[id].traverse(node => {
-      if (!(node instanceof Mesh)) return;
-      highlighted.set(node, node.material);
-      const tint = (material: Material) => {
-        const clone = material.clone();
-        if (clone instanceof MeshStandardMaterial) {
-          clone.emissive.setHex(0xb17a3b);
-          clone.emissiveIntensity = 0.18;
-        }
-        return clone;
-      };
-      node.material = Array.isArray(node.material) ? node.material.map(tint) : tint(node.material);
-    });
-  }
+  const resources = machineResources(root, parts, Object.values(m));
 
   return {
     root, parts,
@@ -142,25 +119,9 @@ export function createEnrober(): MachineInstance {
       blowerGuide: new Vector3(0.73, 2.63, 0.43),
       cabinet: new Vector3(-0.6, 0.89, 0.99),
     },
-    selectPart,
+    ...resources,
     setView(mode) { cutaway.forEach(mesh => { mesh.visible = mode === 'exterior'; }); },
     setBeltOffset(offset) { crossWires.position.x = offset; },
-    dispose() {
-      if (disposed) return;
-      selectPart(null);
-      disposed = true;
-      const geometries = new Set<BufferGeometry>();
-      const materials = new Set<Material>(Object.values(m));
-      root.traverse(node => {
-        if (node instanceof Mesh) {
-          geometries.add(node.geometry);
-          (Array.isArray(node.material) ? node.material : [node.material]).forEach(material => materials.add(material));
-          if (node instanceof InstancedMesh) node.dispose();
-        }
-      });
-      geometries.forEach(g => g.dispose());
-      materials.forEach(material => material.dispose());
-      root.clear();
-    },
+
   };
 }
