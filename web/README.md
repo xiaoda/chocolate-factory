@@ -46,9 +46,9 @@ python -X utf8 web/start_preview.py --stop
 
 ## 修改与重建
 
-### 新增：涂层机 3D 静态样板
+### 涂层机 3D 互动工序样板
 
-本地 HTTP 预览打开 `enrobed.html#equipment-3d`，点击“加载 3D 模型”。支持旋转、缩放、视角复位、四个部件说明和实拍对照；这是造型评审版本，工序动画尚未接入。完整构建：
+本地 HTTP 预览打开 `enrobed.html#equipment-3d`，点击“加载 3D 模型”，再主动播放。V0.2 支持 75 秒工序讲解、暂停/重播/拖动进度、五个阶段关键帧、工作部件/完整外观切换，以及原有旋转、缩放、部件说明和实拍对照。冷却段和回流路径是补充原理示意，教学时间不对应真实加工时间。完整构建：
 
 ```powershell
 npm --prefix web/three ci

@@ -30,7 +30,11 @@ class BuildIntegrationTests(unittest.TestCase):
                 text = page.read_text('utf-8')
                 self.assertEqual('assets/three/viewer.js' in text, page.stem == 'enrobed')
             text = (root / 'enrobed.html').read_text('utf-8')
-            self.assertIn('静态造型样板', text)
+            self.assertIn('互动工序样板', text)
+            self.assertIn('data-playback hidden', text)
+            self.assertEqual(text.count('data-phase="'), 5)
+            self.assertIn('type="range"', text)
+            self.assertIn('非真实加工时间', text)
             self.assertIn('id="equipment-3d"', text)
             self.assertEqual(sentinel.read_text('utf-8'), 'existing stylesheet')
 

@@ -40,6 +40,8 @@ def build_scene_data(scene=None, pages=None, sources=None):
             raise ValueError('阶段时间有重叠、空档或非法时长')
         if not phase['stepIds'] or not set(phase['stepIds']).issubset(step_ids):
             raise ValueError('阶段引用未知步骤')
+        if any(not isinstance(phase.get('caption', {}).get(key), str) or not phase['caption'][key].strip() for key in ('input', 'action', 'output', 'note')):
+            raise ValueError('阶段讲解不完整')
         previous_end = end
     if previous_end != duration:
         raise ValueError('阶段未覆盖完整时长')

@@ -148,7 +148,7 @@ def build_site(with_3d=False):
     for ref in REFERENCES.values():
         manifest += f'- `dist/assets/reference/{ref["file"]}`：{ref["title"]}；作者：{ref["author"]}；许可：{ref["license"]}；[原始文件与许可说明]({ref["url"]})。\n'
     if with_3d:
-        manifest += '\n## 3D 静态样板\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
+        manifest += '\n## 3D 互动工序样板\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
     (HERE / 'ASSETS.md').write_text(manifest,encoding='utf-8')
     print(f'已生成 {len(PAGES)+1} 个 HTML；使用 {len(MANIFEST)} 张实拍。')
 

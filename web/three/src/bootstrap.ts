@@ -49,7 +49,7 @@ if (lab) {
       lab.dataset.state = 'ready';
       lab.querySelector<HTMLElement>('[data-placeholder]')!.hidden = true;
       lab.querySelector<HTMLCanvasElement>('canvas')?.focus({ preventScroll: true });
-      status.textContent = '模型已就绪。当前为静态造型样板，工序动画尚未接入。';
+      status.textContent = '模型已就绪。点击“播放工序”，或点任一步查看关键帧；可随时暂停旋转。';
     } catch (error) {
       if (currentGeneration === generation) showFailure(error);
     } finally {

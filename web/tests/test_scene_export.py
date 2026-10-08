@@ -28,7 +28,11 @@ class SceneExportTests(unittest.TestCase):
         self.assertEqual(data['photos']['machine'], 'assets/photos/25.jpg')
         self.assertEqual(data['duration'], 75)
         self.assertEqual(data['phases'][3]['evidence'], 'schematic')
-        self.assertEqual(data['status'], 'static-prototype')
+        self.assertEqual(data['status'], 'animated-prototype')
+
+    def test_rejects_missing_caption(self):
+        del self.scene['phases'][0]['caption']['input']
+        with self.assertRaises(ValueError): self.build()
 
     def test_invalid_phase_sequences(self):
         for change in ['overlap', 'gap', 'zero', 'nan', 'missing_end']:

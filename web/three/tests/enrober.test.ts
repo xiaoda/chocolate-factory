@@ -40,4 +40,18 @@ describe('程序化涂层机', () => {
     machine.dispose();
     expect(dispose).toHaveBeenCalledTimes(1);
   });
+
+  it('工作视图只隐藏局部外壳，复位完整且网带可按绝对偏移恢复', () => {
+    const machine = createEnrober();
+    const visibility: boolean[] = [];
+    machine.root.traverse(n => visibility.push(n.visible));
+    machine.setView('working');
+    let hidden = 0; machine.root.traverse(n => { if (!n.visible) hidden++; });
+    expect(hidden).toBeGreaterThan(0);
+    machine.setBeltOffset(0.02); machine.setBeltOffset(0);
+    machine.setView('exterior');
+    const restored: boolean[] = []; machine.root.traverse(n => restored.push(n.visible));
+    expect(restored).toEqual(visibility);
+    machine.dispose();
+  });
 });

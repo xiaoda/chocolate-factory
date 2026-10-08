@@ -41,6 +41,6 @@
 - `dist/assets/reference/cacao-pod.jpg`：剖开的可可果，种子外包裹着白色果肉；作者：Keith Weller / USDA ARS；许可：公共领域；[原始文件与许可说明](https://commons.wikimedia.org/wiki/File:Cacao-pod-k4636-14.jpg)。
 - `dist/assets/reference/gold-coins.jpg`：巧克力圆片与金色箔纸，展示金币产品的内外结构；作者：Evan-Amos；许可：CC0 1.0；[原始文件与许可说明](https://commons.wikimedia.org/wiki/File:Chocolate-Gold-Coins.jpg)。
 
-## 3D 静态样板
+## 3D 互动工序样板
 
-涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。
+涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。

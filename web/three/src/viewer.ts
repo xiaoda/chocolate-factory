@@ -4,8 +4,12 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createEnrober } from './machines/enrober';
 import type { MachineInstance, ViewerHandle } from './core/types';
 import data from '../generated/enrobed.json';
+import { evaluateScene, TimelinePlayer } from './core/timeline';
+import { createProcessScene } from './scenes/enrobed';
+import { bindProcessControls } from './ui/controls';
+import { flowLabels } from './ui/labels';
 
-/** 静态查看器：仅在交互或尺寸变化时绘制，没有持续渲染循环。 */
+/** 单一帧循环：播放时刷新；暂停后按需绘制；不可见时保留用户意图并挂起。 */
 export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void): ViewerHandle {
   const host = lab.querySelector<HTMLElement>('[data-canvas-host]')!;
   const pinLayer = lab.querySelector<HTMLElement>('[data-pins]')!;
@@ -18,13 +22,19 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   let renderer: WebGLRenderer | undefined;
   let controls: OrbitControls | undefined;
   let machine: MachineInstance | undefined;
+  let process: ReturnType<typeof createProcessScene> | undefined;
+  let processControls: ReturnType<typeof bindProcessControls> | undefined;
+  const player = new TimelinePlayer();
   let disposed = false;
   let frame = 0;
   let visible = true;
   let renderedFrames = 0;
   const cleanup: (() => void)[] = [];
   const pins = new Map<string, HTMLButtonElement>();
-  const centre = new Vector3(0, 1.32, 0.12);
+  const labels = new Map<string, HTMLDivElement>();
+  const projected = new Vector3();
+  const centre = new Vector3(0.85, 1.3, 0.12);
+  const partPanel = lab.querySelector<HTMLDetailsElement>('.lab-parts-panel')!;
 
   function on(target: EventTarget, name: string, listener: EventListener) {
     target.addEventListener(name, listener);
@@ -34,9 +44,13 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   function dispose() {
     if (disposed) return;
     disposed = true;
+    player.pause();
+    lab.dataset.playing = 'false';
     cancelAnimationFrame(frame);
     cleanup.forEach(fn => fn());
     controls?.dispose();
+    processControls?.dispose();
+    if (process) { scene.remove(process.root); process.dispose(); }
     if (machine) { scene.remove(machine.root); machine.dispose(); }
     scene.traverse(node => {
       if (node instanceof Mesh || node instanceof LineSegments) {
@@ -52,24 +66,61 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     partButtons.forEach(button => { button.disabled = true; button.setAttribute('aria-pressed', 'false'); });
   }
 
-  function render() {
+  function updateProcess() {
+    const state = evaluateScene(player.time);
+    process?.applyState(state);
+    machine?.setBeltOffset(state.beltOffset);
+    processControls?.update(state);
+    for (const label of flowLabels(state)) {
+      const element = labels.get(label.id);
+      if (element) { if (element.textContent !== label.text) element.textContent = label.text; element.dataset.active = String(label.show); }
+    }
+  }
+
+  function render(timestamp: number) {
     frame = 0;
     if (disposed || !visible || document.hidden || !renderer || !machine) return;
+    player.advance(timestamp);
+    updateProcess();
     renderer.render(scene, camera);
     const width = host.clientWidth, height = host.clientHeight;
     for (const [id, button] of pins) {
       const point = machine.anchors[id].clone().applyMatrix4(machine.root.matrixWorld).project(camera);
       const x = (point.x * 0.5 + 0.5) * width;
       const y = (-point.y * 0.5 + 0.5) * height;
-      button.hidden = point.z < -1 || point.z > 1 || x < 16 || x > width - 16 || y < 16 || y > height - 16;
+      button.hidden = !partPanel.open || point.z < -1 || point.z > 1 || x < 16 || x > width - 16 || y < 16 || y > height - 16;
       button.style.left = `${x}px`;
       button.style.top = `${y}px`;
+    }
+    const placed: { left: number; right: number; top: number; bottom: number }[] = [];
+    if (process) for (const id of ['product', 'cooling', 'chocolateInput', 'coreInput', 'coating', 'recovery']) {
+      const element = labels.get(id)!;
+      projected.copy(process.anchors[id as keyof typeof process.anchors]).project(camera);
+      const x = (projected.x * 0.5 + 0.5) * width;
+      let y = (-projected.y * 0.5 + 0.5) * height;
+      element.hidden = element.dataset.active !== 'true' || projected.z < -1 || projected.z > 1 || y < 10 || y > height - 35 || x < 0 || x > width;
+      if (element.hidden) continue;
+      const labelWidth = element.offsetWidth, labelHeight = element.offsetHeight;
+      const left = Math.max(labelWidth / 2 + 5, Math.min(width - labelWidth / 2 - 5, x));
+      // 优先保留被跟踪产品标签；其他标签上移，避免窄屏重叠。
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const collision = placed.find(rect => left + labelWidth / 2 + 4 > rect.left && left - labelWidth / 2 - 4 < rect.right && y > rect.top - 5 && y - labelHeight < rect.bottom + 5);
+        if (!collision) break;
+        y = collision.top - 7;
+      }
+      y = Math.max(labelHeight + 6, y);
+      placed.push({ left: left - labelWidth / 2, right: left + labelWidth / 2, top: y - labelHeight, bottom: y });
+      element.style.left = `${left}px`;
+      element.style.top = `${y}px`;
     }
     // 小型可观察信息，便于浏览器验收；不暴露全局 three.js 对象。
     renderer.domElement.dataset.frames = String(++renderedFrames);
     renderer.domElement.dataset.drawCalls = String(renderer.info.render.calls);
     renderer.domElement.dataset.triangles = String(renderer.info.render.triangles);
     renderer.domElement.dataset.zoom = camera.zoom.toFixed(3);
+    renderer.domElement.dataset.geometries = String(renderer.info.memory.geometries);
+    renderer.domElement.dataset.textures = String(renderer.info.memory.textures);
+    if (player.playing) requestRender();
   }
 
   function requestRender() {
@@ -81,7 +132,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     const width = host.clientWidth, height = host.clientHeight;
     if (width <= 0 || height <= 0) return;
     const aspect = width / height;
-    const viewHeight = Math.max(4.25, 5.5 / aspect);
+    const viewHeight = Math.max(4.25, 7.5 / aspect);
     camera.left = -viewHeight * aspect / 2;
     camera.right = viewHeight * aspect / 2;
     camera.top = viewHeight / 2;
@@ -114,6 +165,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
   function selectPart(id: string) {
     const part = data.parts.find(p => p.id === id);
     if (!part) return;
+    partPanel.open = true;
     machine?.selectPart(id);
     partButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.part === id)));
     pins.forEach((button, key) => button.setAttribute('aria-pressed', String(key === id)));
@@ -134,7 +186,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     renderer.shadowMap.type = PCFShadowMap;
     renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute('role', 'img');
-    renderer.domElement.setAttribute('aria-label', '可旋转的巧克力涂层机静态模型。拖动或方向键旋转，滚轮、双指或加减键缩放；也可使用下方观察角度按钮。');
+    renderer.domElement.setAttribute('aria-label', '巧克力涂层工序互动模型。拖动或方向键旋转，加减键缩放。使用画布下方按钮播放、暂停或逐步查看；工序文字在讲解栏同步显示。');
     host.append(renderer.domElement);
     [host, pinLayer, controlsElement, legend, gesture].forEach(element => { element.hidden = false; });
 
@@ -144,7 +196,7 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     key.position.set(-3, 7, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 0.1, far: 20 });
+    Object.assign(key.shadow.camera, { left: -6, right: 6, top: 5, bottom: -5, near: 0.1, far: 20 });
     key.shadow.bias = -0.0005;
     key.shadow.normalBias = 0.025;
     scene.add(key);
@@ -152,14 +204,31 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
 
     const floor = new Mesh(new PlaneGeometry(100, 100), new MeshStandardMaterial({ color: 0xeee9de, roughness: 1 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = -0.18; floor.receiveShadow = true; scene.add(floor);
-    const plinth = new Mesh(new RoundedBoxGeometry(4.42, 0.15, 2.42, 3, 0.07), new MeshStandardMaterial({ color: 0xd8cbb4, roughness: 0.85 }));
-    plinth.position.set(0, -0.08, 0.16); plinth.castShadow = true; plinth.receiveShadow = true; scene.add(plinth);
+    const plinth = new Mesh(new RoundedBoxGeometry(7.45, 0.15, 2.42, 3, 0.07), new MeshStandardMaterial({ color: 0xd8cbb4, roughness: 0.85 }));
+    plinth.position.set(1, -0.08, 0.16); plinth.castShadow = true; plinth.receiveShadow = true; scene.add(plinth);
     const grid = new GridHelper(14, 28, 0xd9d3c4, 0xd9d3c4);
     grid.material.transparent = true;
     grid.material.opacity = 0.4;
     grid.position.y = -0.176;
     scene.add(grid);
     machine = createEnrober(); scene.add(machine.root);
+    machine.setView('working'); lab.dataset.mode = 'working';
+    process = createProcessScene(); scene.add(process.root);
+    processControls = bindProcessControls(lab, player, () => { updateProcess(); requestRender(); });
+    for (const label of flowLabels(evaluateScene(0))) {
+      const element = document.createElement('div'); element.className = `lab-flow-label lab-flow-${label.id}`;
+      element.setAttribute('aria-hidden', 'true'); labels.set(label.id, element); pinLayer.append(element);
+    }
+    on(partPanel, 'toggle', requestRender);
+    lab.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.mode === 'working'));
+      on(button, 'click', () => {
+        const mode = button.dataset.mode as 'working' | 'exterior';
+        machine?.setView(mode); lab.dataset.mode = mode;
+        lab.querySelectorAll('[data-mode]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+        requestRender();
+      });
+    });
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
@@ -201,11 +270,16 @@ export function mountViewer(lab: HTMLElement, onFailure?: (error: Error) => void
     on(renderer.domElement, 'webglcontextlost', event => {
       event.preventDefault(); dispose(); onFailure?.(new Error('WebGL 上下文已丢失，可重新加载模型。'));
     });
-    on(document, 'visibilitychange', requestRender);
+    function updateVisibility() {
+      player.setSuspended(!visible || document.hidden);
+      if (player.suspended) { cancelAnimationFrame(frame); frame = 0; }
+      updateProcess(); requestRender();
+    }
+    on(document, 'visibilitychange', updateVisibility);
     const observer = new ResizeObserver(resize); observer.observe(host); cleanup.push(() => observer.disconnect());
-    const intersection = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) requestRender(); });
+    const intersection = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; updateVisibility(); });
     intersection.observe(host); cleanup.push(() => intersection.disconnect());
-    setView('perspective'); resize();
+    updateVisibility(); setView('perspective'); resize();
     return { dispose };
   } catch (error) {
     dispose();

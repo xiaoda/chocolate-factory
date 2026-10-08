@@ -24,8 +24,10 @@ class SiteTests(unittest.TestCase):
         text = (ROOT / 'enrobed.html').read_text('utf-8')
         if 'id="equipment-3d"' not in text:
             self.skipTest('本次为纯图文构建')
-        self.assertIn('静态造型样板', text)
-        self.assertIn('工序动画尚未接入', text)
+        self.assertIn('互动工序样板', text)
+        self.assertIn('补充工序示意', text)
+        self.assertNotIn('工序动画尚未接入', text)
+        self.assertEqual(text.count('data-phase="'), 5)
         self.assertIn('type="module" src="assets/three/viewer.js"', text)
         folder = ROOT / 'assets/three'
         for name in ['viewer.js', 'viewer.css', 'THIRD_PARTY_LICENSES.md']:

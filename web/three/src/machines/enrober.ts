@@ -3,6 +3,7 @@ import type { BufferGeometry, Material } from 'three';
 import { createMaterials } from '../geometry/materials';
 import { box, cylinder, pipe } from '../geometry/primitives';
 import type { MachineInstance } from '../core/types';
+import { batchStaticMeshes } from '../geometry/batch';
 
 /** 比例来自照片观察，不表示精确测量。未展示真实隐藏机构。 */
 export function createEnrober(): MachineInstance {
@@ -16,6 +17,7 @@ export function createEnrober(): MachineInstance {
     return [name, group];
   }));
   const { cabinet, conveyor, coatingHead, blowerGuide } = parts;
+  const cutaway: Mesh[] = [];
 
   // 主机柜：右侧主体、左前方控制箱、柜缝与四只脚轮。
   box(cabinet, [1.72, 1.17, 1.08], [0.18, 0.8, 0], m.shell, 0.055);
@@ -66,13 +68,14 @@ export function createEnrober(): MachineInstance {
   belt.add(lengthWires);
   box(conveyor, [1.48, 0.035, 0.9], [-0.15, 1.43, 0], m.darkSteel, 0.01).name = 'collectionTray';
   box(conveyor, [0.34, 0.075, 0.045], [1.42, 1.73, -0.38], m.darkSteel);
-  for (const x of [-1.45, -1.12]) box(conveyor, [0.2, 0.067, 0.28], [x, 1.63, 0], m.biscuit, 0.035).name = 'inputExample';
-  for (const x of [1.25, 1.58]) box(conveyor, [0.21, 0.075, 0.29], [x, 1.634, 0], m.chocolate, 0.04).name = 'outputExample';
 
   // 开口料槽与供料弯管，保留照片左侧醒目的轮廓。
   box(coatingHead, [0.38, 0.045, 0.76], [-0.67, 1.84, 0], m.steel);
   for (const x of [-0.85, -0.49]) box(coatingHead, [0.025, 0.29, 0.78], [x, 1.99, 0], m.panel, 0.005);
-  for (const z of [-0.38, 0.38]) box(coatingHead, [0.38, 0.29, 0.027], [-0.67, 1.99, z], m.steel, 0.005);
+  for (const z of [-0.38, 0.38]) {
+    const wall = box(coatingHead, [0.38, 0.29, 0.027], [-0.67, 1.99, z], m.steel, 0.005);
+    if (z > 0) cutaway.push(wall);
+  }
   box(coatingHead, [0.04, 0.12, 0.67], [-0.5, 1.77, 0], m.darkSteel, 0.003);
   for (const z of [-0.38, 0.38]) cylinder(coatingHead, 0.022, 0.31, [-0.73, 1.71, z], m.steel);
   pipe(coatingHead, [[-0.94, 1.48, -0.31], [-0.94, 2.24, -0.31], [-0.79, 2.29, -0.3], [-0.67, 2.15, -0.26]], 0.045, m.steel);
@@ -84,6 +87,7 @@ export function createEnrober(): MachineInstance {
   }
   const hood = box(blowerGuide, [0.75, 0.045, 1.05], [0.66, 2.56, 0], m.panel, 0.015);
   hood.rotation.z = -0.07;
+  cutaway.push(hood);
   for (const z of [-0.49, 0.49]) box(blowerGuide, [0.76, 0.13, 0.025], [0.66, 2.49, z], m.steel, 0.005);
   cylinder(blowerGuide, 0.018, 0.22, [0.66, 2.65, 0], m.darkSteel);
   cylinder(blowerGuide, 0.065, 0.022, [0.66, 2.73, 0], m.dark);
@@ -97,6 +101,7 @@ export function createEnrober(): MachineInstance {
     rings.setMatrixAt(i, new Matrix4().compose(hose.getPointAt(t), q, new Vector3(1, 1, 1)));
   }
   blowerGuide.add(rings);
+  Object.values(parts).forEach(part => batchStaticMeshes(part, new Set(cutaway)));
 
   let disposed = false;
   const highlighted = new Map<Mesh, Material | Material[]>();
@@ -138,6 +143,8 @@ export function createEnrober(): MachineInstance {
       cabinet: new Vector3(-0.6, 0.89, 0.99),
     },
     selectPart,
+    setView(mode) { cutaway.forEach(mesh => { mesh.visible = mode === 'exterior'; }); },
+    setBeltOffset(offset) { crossWires.position.x = offset; },
     dispose() {
       if (disposed) return;
       selectPart(null);
