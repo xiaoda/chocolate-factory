@@ -4,7 +4,7 @@
 
 ## 直接阅读
 
-- 本次本机预览：<http://127.0.0.1:54898/>。服务运行时有效，仅在这台电脑上访问。
+- 本机预览：运行 `python -X utf8 web/start_preview.py`，使用当次返回的地址，不沿用历史临时端口。
 - 本地入口：`dist/index.html`。离线时可用浏览器打开；请完整保留 `dist`，不要只复制某个 HTML，否则图片和样式会丢失。
 - 分享包：项目根目录的 `可可工艺笔记-离线版.zip`。先完整解压，再打开其中的 `index.html`。本项目未发布到公网。
 - 每个产品页是独立的长页面，可以从头读完，也可在流程速览中点击步骤跳转。
@@ -45,6 +45,24 @@ python -X utf8 web/start_preview.py --stop
 运行信息位于 `.preview/server.json`；日志为 `.preview/stdout.log` 和 `.preview/stderr.log`。服务只监听 `127.0.0.1`，只提供 `dist`，禁用目录浏览和越界路径。
 
 ## 修改与重建
+
+### 新增：涂层机 3D 静态样板
+
+本地 HTTP 预览打开 `enrobed.html#equipment-3d`，点击“加载 3D 模型”。支持旋转、缩放、视角复位、四个部件说明和实拍对照；这是造型评审版本，工序动画尚未接入。完整构建：
+
+```powershell
+npm --prefix web/three ci
+python -X utf8 web/build_all.py
+python -X utf8 -m unittest discover -s web/tests -v
+npm --prefix web/three run test
+python -X utf8 web/test_site.py
+```
+
+源代码、技术边界、锁定版本和验证说明见 [`three/README.md`](three/README.md) 与 [`three/验收记录.md`](three/验收记录.md)。3D 运行依赖已本地打包，不需要联网；安装开发依赖需要网络。直接双击 HTML 时保留图文阅读，3D 请改用本地 HTTP。原有 ZIP 尚未更新。
+
+### 原有图文构建
+
+以下 `build.py` 命令只生成图文页面，不插入 3D；恢复 3D 入口请使用上面的 `build_all.py`。
 
 - `content.py`：步骤文案、图片对应关系、引用来源。
 - `build.py`：页面模板与生成逻辑。

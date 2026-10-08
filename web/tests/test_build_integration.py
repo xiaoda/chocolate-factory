@@ -1,0 +1,45 @@
+"""在临时目录验证集成，不覆盖用户现有网页或素材。"""
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import build
+
+
+class BuildIntegrationTests(unittest.TestCase):
+    def test_3d_requires_assets(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(build, 'OUT', Path(tmp) / 'dist'), patch.object(build, 'HERE', Path(tmp)):
+            with self.assertRaises(FileNotFoundError):
+                build.build_site(with_3d=True)
+            self.assertFalse((Path(tmp) / 'dist/enrobed.html').exists())
+
+    def test_only_enrobed_gets_viewer_and_existing_assets_survive(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(build, 'OUT', Path(tmp) / 'dist'), patch.object(build, 'HERE', Path(tmp)):
+            root = Path(tmp) / 'dist'
+            (root / 'assets/three').mkdir(parents=True)
+            for name in ['viewer.js', 'viewer.css']:
+                (root / 'assets/three' / name).write_text('/* fixture */', encoding='utf-8')
+            sentinel = root / 'assets/style.css'
+            sentinel.write_text('existing stylesheet', encoding='utf-8')
+            build.build_site(with_3d=True)
+            self.assertEqual(len(list(root.glob('*.html'))), 10)
+            for page in root.glob('*.html'):
+                text = page.read_text('utf-8')
+                self.assertEqual('assets/three/viewer.js' in text, page.stem == 'enrobed')
+            text = (root / 'enrobed.html').read_text('utf-8')
+            self.assertIn('静态造型样板', text)
+            self.assertIn('id="equipment-3d"', text)
+            self.assertEqual(sentinel.read_text('utf-8'), 'existing stylesheet')
+
+    def test_plain_build_has_no_3d_dependency(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(build, 'OUT', Path(tmp) / 'dist'), patch.object(build, 'HERE', Path(tmp)):
+            build.build_site()
+            text = (Path(tmp) / 'dist/enrobed.html').read_text('utf-8')
+            self.assertNotIn('assets/three/', text)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

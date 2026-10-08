@@ -20,6 +20,21 @@ class Document(HTMLParser):
             self.ids.append(attrs['id'])
 
 class SiteTests(unittest.TestCase):
+    def test_optional_three_integration(self):
+        text = (ROOT / 'enrobed.html').read_text('utf-8')
+        if 'id="equipment-3d"' not in text:
+            self.skipTest('本次为纯图文构建')
+        self.assertIn('静态造型样板', text)
+        self.assertIn('工序动画尚未接入', text)
+        self.assertIn('type="module" src="assets/three/viewer.js"', text)
+        folder = ROOT / 'assets/three'
+        for name in ['viewer.js', 'viewer.css', 'THIRD_PARTY_LICENSES.md']:
+            self.assertTrue((folder / name).is_file(), name)
+        self.assertTrue(list((folder / 'chunks').glob('*.js')))
+        for name in NAMES:
+            if name != 'enrobed':
+                self.assertNotIn('assets/three/', (ROOT / f'{name}.html').read_text('utf-8'))
+
     def test_content_sources(self):
         from content import PAGES, SOURCES
         self.assertEqual(len(PAGES), 9)

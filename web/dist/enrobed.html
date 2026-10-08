@@ -2,7 +2,7 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="饼干、糕点或糖芯先在别处做好，再进入涂层机。机器负责的是“给芯体穿外衣”，不是制造里面的饼干或糖。"><meta name="theme-color" content="#38251e">
 <title>涂层巧克力 · 可可工艺笔记</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>
+<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script><link rel="stylesheet" href="assets/three/viewer.css"><script type="module" src="assets/three/viewer.js"></script></head><body>
 <a class="skip" href="#main">跳到正文</a><div class="reading-track" aria-hidden="true"><div id="reading-progress"></div></div>
 <header class="site-header"><div class="header-inner"><a class="brand" href="index.html" aria-label="可可工艺笔记首页"><span class="brand-mark" aria-hidden="true">可</span><span>可可工艺笔记<small>从博物馆，看懂制造</small></span></a>
 <nav aria-label="主导航"><a href="index.html#collection">工艺目录 <span aria-hidden="true">↗</span></a><a href="index.html#about">阅读说明</a></nav><span class="edition">参观照片图解 / 01</span></div></header>
@@ -12,6 +12,46 @@
     <figcaption>巧克力涂层机 · 网带输送芯体，涂层料覆盖表面</figcaption></figure></section>
 <div class="material-strip"><div><span>从什么开始</span><strong>已制好的芯体、适合涂层的巧克力料</strong></div><div><span>最后得到什么</span><strong>带巧克力涂层的饼干、糖芯等产品</strong></div><div><span>一句话原理</span><strong>连续淋涂包覆，控制厚度后凝固</strong></div></div>
 <section class="process-summary" id="process"><div class="section-heading"><div><p class="eyebrow accent">先把顺序记住</p><h2>一眼看懂流程</h2></div><p>点击任一步，跳到图文解释 ↓</p></div><ol class="flow-list"><li><a href="#step-1"><span>01</span>芯体制备</a></li><li><a href="#step-2"><span>02</span>涂层料准备</a></li><li><a href="#step-3"><span>03</span>排料 · 淋涂 · 底涂</a></li><li><a href="#step-4"><span>04</span>振动 · 吹风控量</a></li><li><a href="#step-5"><span>05</span>冷却 · 包装</a></li></ol><p class="boundary"><strong>这张流程图的边界</strong>本页以可可脂巧克力的典型涂层路线为例。全涂、半涂和仅底涂是不同配置；不是每一种产品都同时进行上下涂层。</p></section>
+
+<section id="equipment-3d" class="equipment-lab" aria-labelledby="lab-title" data-equipment-lab data-state="idle">
+  <header class="lab-heading">
+    <div><p class="lab-kicker">设备观察室 <span>／ 01</span></p><h2 id="lab-title">巧克力涂层机</h2><p class="lab-subtitle">从照片走进结构，换个角度看机器。</p></div>
+    <span class="lab-edition">静态造型样板 <b>V0.1</b></span>
+  </header>
+  <div class="lab-shell">
+    <div class="lab-workspace">
+      <div class="lab-topline"><span><i aria-hidden="true"></i> 程序化模型 · 非精密复刻</span><span>参照实拍 25 / 26</span></div>
+      <div class="lab-stage" data-stage>
+        <div class="lab-placeholder" data-placeholder>
+          <img src="assets/photos/25.jpg" width="1280" height="1707" alt="涂层机原始实拍，作为三维模型的造型依据" loading="lazy">
+          <div class="lab-placeholder-copy"><span class="lab-preview-tag">一张照片，多个观察角度</span><h3>先看清结构，<br>再跟着物料走。</h3><p>加载可旋转的 3D 造型。<br>本版先确认外形，工序动画尚未接入。</p><button class="lab-primary" type="button" data-load disabled>加载 3D 模型 <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div class="lab-canvas-host" data-canvas-host hidden></div>
+        <div class="lab-pins" data-pins hidden></div>
+        <div class="lab-stage-legend" data-stage-legend hidden><span>物料仅作位置示意</span><span>转动视角不会启动设备</span></div>
+      </div>
+      <div class="lab-tools" data-view-controls hidden>
+        <div class="lab-views" aria-label="选择观察角度">
+          <button type="button" data-view="perspective" aria-pressed="true">立体</button>
+          <button type="button" data-view="front" aria-pressed="false">正面</button>
+          <button type="button" data-view="top" aria-pressed="false">俯视</button>
+        </div>
+        <div class="lab-zoom"><button type="button" data-zoom="in" aria-label="放大模型">＋</button><button type="button" data-zoom="out" aria-label="缩小模型">−</button><button type="button" data-reset>复位视角</button></div>
+      </div>
+      <p class="lab-gesture" data-gesture hidden>拖动旋转 · 滚轮 / 双指缩放 · 画布内方向键旋转、＋ / − 缩放</p>
+      <p class="lab-status" role="status" aria-live="polite" data-status>点击后加载本地模型；3D 需通过 HTTP 预览，直接双击 HTML 时请阅读图文。</p>
+    </div>
+    <aside class="lab-inspector" aria-label="部件说明与实拍对照">
+      <div class="lab-inspector-heading"><span>观察笔记</span><span class="lab-tiny-number">25—26</span></div>
+      <div class="lab-part-list" aria-label="选择设备部件"><button type="button" class="lab-part" data-part="conveyor" aria-pressed="false" disabled><span>01</span>输送网带</button><button type="button" class="lab-part" data-part="coatingHead" aria-pressed="false" disabled><span>02</span>涂层头与料槽</button><button type="button" class="lab-part" data-part="blowerGuide" aria-pressed="false" disabled><span>03</span>吹风与控量区域</button><button type="button" class="lab-part" data-part="cabinet" aria-pressed="false" disabled><span>04</span>机柜与控制面板</button></div>
+      <div class="lab-part-detail" aria-live="polite"><p class="lab-detail-tag" data-part-tag>先确认造型</p><h3 data-part-title>保留辨识度，省略繁琐细节。</h3><p data-part-description>网带、料槽、罩体、蓝色软管与前置控制箱，都从实拍中提取。加载后可点编号查看部件。</p></div>
+      <figure class="lab-reference"><a href="assets/photos/25.jpg" data-lightbox data-caption="涂层机实拍 · 照片 25；模型为简化造型，不是精密复刻。"><img src="assets/photos/25.jpg" width="1280" height="1707" alt="模型对应的涂层机实拍照片 25" loading="lazy"><span>实拍对照 <b aria-hidden="true">↗</b></span></a><figcaption><a href="assets/photos/26.jpg" data-lightbox data-caption="涂层机说明牌 · 照片 26">阅读展牌 26 ↗</a><button type="button" data-compare aria-pressed="false" disabled>放大对照</button></figcaption></figure>
+    </aside>
+  </div>
+  <div class="lab-materials"><div><span>进入设备</span><strong>已制好的芯体 ＋ 巧克力料</strong></div><span class="lab-material-arrow" aria-hidden="true">→</span><div><span>离开设备</span><strong>刚包覆的产品，仍需冷却</strong></div><p>台面上的物料仅作位置示意，<br>本版机器尚未运转。</p></div>
+  <p class="lab-boundary"><span>模型边界</span> 外形参考实拍 25／26；尺寸、背面与隐藏连接为简化示意。物料方向用于讲解，不是历史配置测绘。</p>
+  <noscript><p class="lab-noscript">3D 需要 JavaScript；设备照片、展牌和下方全部工艺正文仍可阅读。</p></noscript>
+</section>
 <div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a><a href="#step-1"><span>01</span>芯体制备</a><a href="#step-2"><span>02</span>涂层料准备</a><a href="#step-3"><span>03</span>排料 · 淋涂 · 底涂</a><a href="#step-4"><span>04</span>振动 · 吹风控量</a><a href="#step-5"><span>05</span>冷却 · 包装</a><a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
 <div class="article-body"><section id="steps"><div class="section-heading"><div><p class="eyebrow accent">跟着物料走一遍</p><h2>每一步，发生了什么？</h2></div></div><section class="step text-step" id="step-1" aria-labelledby="step-title-1">
         <div class="step-number">01</div><div class="step-copy"><div class="eyebrow">芯体制备 <span class="evidence">资料补全</span></div><h3 id="step-title-1">先把芯体做好</h3>

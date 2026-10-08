@@ -19,3 +19,9 @@ venv/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# three.js 模块的本地依赖与生成数据
+web/three/node_modules/
+web/three/generated/
+web/three/coverage/
+web/three/.vite/

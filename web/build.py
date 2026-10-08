@@ -3,12 +3,13 @@ from pathlib import Path
 from html import escape as e
 import shutil
 import struct
+import argparse
+from three_markup import render_equipment_lab
 from content import PAGES, SOURCES, REFERENCES
 
 HERE = Path(__file__).resolve().parent
 OUT = HERE / 'dist'
 PHOTOS = HERE.parent / 'photos'
-OUT.mkdir(exist_ok=True)
 MANIFEST = {}
 
 def size(path):
@@ -64,12 +65,13 @@ def figure(key, caption, plate=None, hero=False):
     <a class="photo-link" href="{path}" data-lightbox data-caption="{e(caption, quote=True)}" aria-label="放大照片：{e(caption, quote=True)}">{image(key,caption,hero)}<span class="photo-label">{evidence}</span><span class="expand" aria-hidden="true">↗</span></a>
     <figcaption>{e(caption)}{credit}{plate_link}</figcaption></figure>'''
 
-def head(title, description):
+def head(title, description, with_3d=False):
+    extra = '<link rel="stylesheet" href="assets/three/viewer.css"><script type="module" src="assets/three/viewer.js"></script>' if with_3d else ''
     return f'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{e(description,quote=True)}"><meta name="theme-color" content="#38251e">
 <title>{e(title)} · 可可工艺笔记</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>
+<link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script>{extra}</head><body>
 <a class="skip" href="#main">跳到正文</a><div class="reading-track" aria-hidden="true"><div id="reading-progress"></div></div>
 <header class="site-header"><div class="header-inner"><a class="brand" href="index.html" aria-label="可可工艺笔记首页"><span class="brand-mark" aria-hidden="true">可</span><span>可可工艺笔记<small>从博物馆，看懂制造</small></span></a>
 <nav aria-label="主导航"><a href="index.html#collection">工艺目录 <span aria-hidden="true">↗</span></a><a href="index.html#about">阅读说明</a></nav><span class="edition">参观照片图解 / 01</span></div></header>'''
@@ -82,7 +84,7 @@ def foot():
 def source_links(keys):
     return ''.join(f'<a class="inline-source" href="#source-{k}">资料 {e(SOURCES[k][0].split(" · ")[0])} ↙</a>' for k in keys)
 
-def detail(page, idx):
+def detail(page, idx, with_3d=False):
     slug, name = page['slug'], page['name']
     steps = page['steps']
     step_html = []
@@ -105,12 +107,14 @@ def detail(page, idx):
     nex = PAGES[(idx+1) % len(PAGES)]
     prevlink = f'<a href="{prev["slug"]}.html">← 上一篇 · {prev["name"]}</a>' if prev else '<a href="index.html">← 返回工艺总览</a>'
     badge = '巧克力工艺' if page['category']=='chocolate' else '糖果工艺'
-    return head(name,page['summary']) + f'''
+    enhanced = with_3d and slug == 'enrobed'
+    lab = render_equipment_lab() if enhanced else ''
+    return head(name,page['summary'], enhanced) + f'''
 <main id="main"><div class="wrap"><div class="breadcrumb"><a href="index.html">工艺总览</a><span>/</span><span>{idx+1:02} · {name}</span><button class="print-button" type="button" data-print>打印本页 ↗</button></div>
 <section class="detail-hero"><div class="hero-copy"><div class="eyebrow accent">工艺笔记 {idx+1:02} / {badge}</div><p class="product-label">{name} <span>— {page['kicker']}</span></p><h1>{page['title']}</h1><p class="lede">{page['summary']}</p><a class="button" href="#process">先看流程 <span aria-hidden="true">↓</span></a><span class="readtime">约 {page['minutes']} 分钟读懂</span></div>{figure(page['hero'],page['hero_caption'],hero=True)}</section>
 <div class="material-strip"><div><span>从什么开始</span><strong>{page['ingredients']}</strong></div><div><span>最后得到什么</span><strong>{page['result']}</strong></div><div><span>一句话原理</span><strong>{page['principle']}</strong></div></div>
 <section class="process-summary" id="process"><div class="section-heading"><div><p class="eyebrow accent">先把顺序记住</p><h2>一眼看懂流程</h2></div><p>点击任一步，跳到图文解释 ↓</p></div><ol class="flow-list">{flow}</ol><p class="boundary"><strong>这张流程图的边界</strong>{page['boundary']}</p></section>
-<div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a>{sidenav}<a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
+{lab}<div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a>{sidenav}<a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
 <div class="article-body"><section id="steps"><div class="section-heading"><div><p class="eyebrow accent">跟着物料走一遍</p><h2>每一步，发生了什么？</h2></div></div>{''.join(step_html)}</section>
 <section class="knowledge" id="knowledge"><div class="section-heading"><div><p class="eyebrow accent">多懂一点</p><h2>容易混淆的地方</h2></div></div><div class="insight-grid">{insight}</div></section>
 <section class="self-check"><p class="eyebrow">30 秒自测</p><h2>{page['quiz'][0]}</h2><details><summary>想好了吗？展开答案</summary><p>{page['quiz'][1]}</p></details></section>
@@ -128,13 +132,28 @@ def index():
 <section id="collection" class="collection"><div class="section-heading"><div><p class="eyebrow accent">选一种产品，跟着流程走</p><h2>九种工艺，各有路径。</h2></div><p>先读基础，再按兴趣分流。</p></div><div class="filter-bar"><div class="filters" aria-label="按工艺类别筛选"><button type="button" data-filter="all" aria-pressed="true">全部工艺 <span>09</span></button><button type="button" data-filter="chocolate" aria-pressed="false">巧克力 <span>05</span></button><button type="button" data-filter="candy" aria-pressed="false">糖果与奶片 <span>04</span></button></div><span class="filter-status" role="status" aria-live="polite">{len(PAGES)} 条阅读路线</span></div><div class="card-grid">{''.join(cards)}</div></section>
 <section id="about" class="about"><div><p class="eyebrow accent">关于这本图解手册</p><h2>看到的、补全的，<br>分开说清楚。</h2><p>照片是起点，不是工厂的完整档案。<br>不按拍摄顺序编排，而按物料流向讲解。</p></div><div class="about-notes"><article><span class="tag">你的实拍</span><h3>机器与展牌相互对照</h3><p>在对应步骤查看设备照片，点击放大；有清晰展牌的，附展牌入口。保留原图，不给未知设备硬贴身份。</p></article><article><span class="tag light">资料补全</span><h3>把照片之外的步骤接起来</h3><p>用行业组织和制造商资料解释未拍到的环节。补充图片标明作者与许可；各页末尾列出参考链接。</p></article><article><span class="tag light">阅读边界</span><h3>学原理，不照抄生产参数</h3><p>展示的是典型制作逻辑，不是特定工厂的设备配置或配方。原料、温度、时间和检验限值仍需专业验证。</p></article></div></section></div></main>''' + foot()
 
-for idx, page in enumerate(PAGES):
-    (OUT / f'{page["slug"]}.html').write_text(detail(page,idx),encoding='utf-8')
-(OUT / 'index.html').write_text(index(),encoding='utf-8')
-manifest = '# 图片来源与使用说明\n\n## 用户实拍\n\n原图位于项目 photos 文件夹，网页只复制，不改写原件。下表编号沿用原文件名。\n\n| 输出文件 | 原文件 |\n|---|---|\n'
-manifest += '\n'.join(f'| dist/assets/photos/{k:02}.jpg | {v} |' for k,v in sorted(MANIFEST.items()))
-manifest += '\n\n## 公网补充图\n\n均下载到本地用于离线阅读，未修改原始图像；页面可能通过 CSS 等比缩放/裁切展示，可打开完整原图。\n\n'
-for ref in REFERENCES.values():
-    manifest += f'- `dist/assets/reference/{ref["file"]}`：{ref["title"]}；作者：{ref["author"]}；许可：{ref["license"]}；[原始文件与许可说明]({ref["url"]})。\n'
-(HERE / 'ASSETS.md').write_text(manifest,encoding='utf-8')
-print(f'已生成 {len(PAGES)+1} 个 HTML；使用 {len(MANIFEST)} 张实拍。')
+def build_site(with_3d=False):
+    if with_3d:
+        for name in ('viewer.js', 'viewer.css'):
+            if not (OUT / 'assets/three' / name).is_file():
+                raise FileNotFoundError(f'缺少 3D 构建产物 {name}；请运行 python web/build_all.py')
+    OUT.mkdir(parents=True, exist_ok=True)
+    MANIFEST.clear()
+    for idx, page in enumerate(PAGES):
+        (OUT / f'{page["slug"]}.html').write_text(detail(page,idx,with_3d),encoding='utf-8')
+    (OUT / 'index.html').write_text(index(),encoding='utf-8')
+    manifest = '# 图片来源与使用说明\n\n## 用户实拍\n\n原图位于项目 photos 文件夹，网页只复制，不改写原件。下表编号沿用原文件名。\n\n| 输出文件 | 原文件 |\n|---|---|\n'
+    manifest += '\n'.join(f'| dist/assets/photos/{k:02}.jpg | {v} |' for k,v in sorted(MANIFEST.items()))
+    manifest += '\n\n## 公网补充图\n\n均下载到本地用于离线阅读，未修改原始图像；页面可能通过 CSS 等比缩放/裁切展示，可打开完整原图。\n\n'
+    for ref in REFERENCES.values():
+        manifest += f'- `dist/assets/reference/{ref["file"]}`：{ref["title"]}；作者：{ref["author"]}；许可：{ref["license"]}；[原始文件与许可说明]({ref["url"]})。\n'
+    if with_3d:
+        manifest += '\n## 3D 静态样板\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
+    (HERE / 'ASSETS.md').write_text(manifest,encoding='utf-8')
+    print(f'已生成 {len(PAGES)+1} 个 HTML；使用 {len(MANIFEST)} 张实拍。')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--with-3d', action='store_true', help='插入已构建的静态 3D 样板')
+    build_site(parser.parse_args().with_3d)
