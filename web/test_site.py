@@ -31,8 +31,11 @@ class SiteTests(unittest.TestCase):
         self.assertIn('type="module" src="assets/three/viewer.js"', text)
         stone = (ROOT / 'chocolate.html').read_text('utf-8')
         self.assertIn('data-scene="stone-mill"', stone)
-        self.assertIn('研磨动画尚未接入', stone)
-        self.assertNotIn('data-play', stone)
+        self.assertIn('研磨工序样板', stone)
+        self.assertNotIn('研磨动画尚未接入', stone)
+        self.assertIn('data-playback hidden', stone)
+        self.assertEqual(stone.count('data-phase="'), 4)
+        self.assertIn('max="60"', stone)
         self.assertIn('href="#step-3"', stone)
         folder = ROOT / 'assets/three'
         for name in ['viewer.js', 'viewer.css', 'THIRD_PARTY_LICENSES.md']:

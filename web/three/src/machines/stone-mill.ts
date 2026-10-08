@@ -2,10 +2,10 @@ import { Color, CylinderGeometry, Float32BufferAttribute, Group, LatheGeometry, 
 import { box, cylinder } from '../geometry/primitives';
 import { batchStaticMeshes } from '../geometry/batch';
 import { machineResources } from '../core/machine-resources';
-import type { MachineInstance } from '../core/types';
+import type { StoneMillInstance } from '../core/types';
 
 /** 只还原照片可见轮廓；不推定传动关系、出料阀或真实尺寸。 */
-export function createStoneMill(): MachineInstance {
+export function createStoneMill(): StoneMillInstance {
   const root = new Group(); root.name = 'stoneMillRoot';
   const parts = Object.fromEntries(['bowl', 'stones', 'bridge', 'drive'].map(id => {
     const group = new Group(); group.name = id; root.add(group); return [id, group];
@@ -21,7 +21,7 @@ export function createStoneMill(): MachineInstance {
 
   // 盘底和有厚度的盘壁：上部保持真正的开口。
   cylinder(parts.bowl, 1.56, 0.59, [0, 1.055, 0], shell);
-  cylinder(parts.bowl, 1.43, 0.1, [0, 1.39, 0], edge).name = 'grindingBed';
+  const bed = cylinder(parts.bowl, 1.43, 0.1, [0, 1.39, 0], edge); bed.name = 'grindingBed';
   const profile = [[1.43, 1.35], [1.59, 1.35], [1.59, 1.77], [1.46, 1.77], [1.43, 1.35]].map(([r, y]) => new Vector2(r, y));
   const frontWall = add(parts.bowl, new Mesh(new LatheGeometry(profile, 40, -Math.PI / 2, Math.PI), shell), 'bowl-front');
   const backWall = add(parts.bowl, new Mesh(new LatheGeometry(profile, 40, Math.PI / 2, Math.PI), shell), 'bowl-back');
@@ -38,9 +38,11 @@ export function createStoneMill(): MachineInstance {
     colors.push(base.r * shade, base.g * shade, base.b * shade);
   }
   stoneGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  // 几何轴固定为 X；之后只绕 X 自转，不让轴线随欧拉角摆动。
+  stoneGeometry.rotateZ(Math.PI / 2);
   const rollers = [-0.7, 0.7].map((x, i) => {
     const mesh = add(parts.stones, new Mesh(stoneGeometry, stone), i === 0 ? 'stone-left' : 'stone-right');
-    mesh.rotation.z = Math.PI / 2; mesh.position.set(x, 1.97, 0.05); return mesh;
+    mesh.position.set(x, 1.97, 0.05); return mesh;
   });
   cylinder(parts.stones, 0.12, 2.55, [0, 1.97, 0.05], brown, 'x');
   cylinder(parts.stones, 0.18, 1.29, [0, 2.045, 0.05], brown);
@@ -80,7 +82,7 @@ export function createStoneMill(): MachineInstance {
   box(parts.drive, [0.31, 0.12, 0.013], [0.06, 1.12, 1.585], dark, 0.009);
   for (const x of [-0.09, 0.21]) cylinder(parts.drive, 0.015, 0.025, [x, 1.18, 1.6], edge, 'z');
 
-  const exclusions = new Set([frontWall, backWall, rim, ...rollers]);
+  const exclusions = new Set([bed, frontWall, backWall, rim, ...rollers]);
   Object.values(parts).forEach(part => batchStaticMeshes(part, exclusions));
   const resources = machineResources(root, parts, materials);
   return {
@@ -91,6 +93,12 @@ export function createStoneMill(): MachineInstance {
       bridge: new Vector3(0.68, 2.88, 0.13), drive: new Vector3(-1.57, 0.67, 0.5),
     },
     setView(mode) { frontWall.visible = mode === 'exterior'; rim.visible = mode === 'exterior'; },
+    // 仅用于教学运动示意；固定件不参与运动，不认定本展品的实际传动。
+    setGrindingAngle(value) {
+      const angle = Number.isFinite(value) ? value : 0;
+      bed.rotation.y = angle;
+      rollers.forEach(roller => { roller.rotation.x = angle * roller.position.x / 0.53; });
+    },
     ...resources,
   };
 }

@@ -28,3 +28,25 @@ it('工作示意可复原；高亮不污染共享材质，销毁幂等', () => {
   const release = vi.spyOn(stone.geometry, 'dispose');
   model.dispose(); model.dispose(); expect(release).toHaveBeenCalledTimes(1);
 });
+
+it('研磨面与石辊可独立运动，横梁和底座保持固定，倒退可恢复', () => {
+  const model = createStoneMill();
+  const left = model.root.getObjectByName('stone-left') as Mesh;
+  const right = model.root.getObjectByName('stone-right') as Mesh;
+  const bed = model.root.getObjectByName('grindingBed') as Mesh;
+  expect(bed).toBeDefined();
+  model.root.updateMatrixWorld(true);
+  const fixed = model.parts.bridge.matrix.clone();
+  model.setGrindingAngle(2);
+  model.root.updateMatrixWorld(true);
+  expect(left.rotation.x).toBeCloseTo(-2 * 0.7 / 0.53);
+  expect(right.rotation.x).toBeCloseTo(2 * 0.7 / 0.53);
+  expect(left.rotation.y).toBe(0);
+  expect(left.rotation.z).toBe(0);
+  expect(bed.rotation.y).toBe(2);
+  expect(model.parts.bridge.matrix).toEqual(fixed);
+  model.setGrindingAngle(0);
+  expect(left.rotation.x).toBeCloseTo(0);
+  expect(bed.rotation.y).toBe(0);
+  model.dispose();
+});

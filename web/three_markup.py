@@ -11,18 +11,25 @@ def render_equipment_lab(scene_id='enrobed'):
     name = escape(scene['name'])
     machine_number = machine_photo.rsplit('/', 1)[-1].split('.')[0]
     plate_number = plate_photo.rsplit('/', 1)[-1].split('.')[0]
-    if animated:
+    if scene_id == 'enrobed':
         copy = dict(number='01', title='跟着一块饼干，穿过涂层机。', subtitle='两路输入，一层新外衣。转动设备，也看懂物料的变化。',
                     edition='互动工序样板', version='V0.2', tag='从设备实拍，到工序动画', teaser='芯体进去，<br>裹上巧克力出来。',
                     hint='加载后主动播放 75 秒讲解，<br>也可逐步查看、暂停旋转。', legend='<span>金色圆环：跟踪的芯体</span><span>蓝色后段：补充工序示意</span>',
                     detail='网带、料槽、罩体、蓝色软管与前置控制箱，都从实拍中提取。工作示意隐藏局部外壳，不代表还原了真实内部结构。')
         materials = [('进入涂层机', '已制好的芯体 ＋ 巧克力料'), ('离开涂层机', '刚包覆的产品，仍需冷却'), ('独立后续工序', '冷却定型，再检查包装')]
     else:
-        copy = dict(number='02', title='两只石辊，一盘可可的变化。', subtitle='先看清设备结构，再讲研磨如何发生。',
-                    edition='静态造型样板', version='V0.3', tag='从设备实拍，到结构观察', teaser='圆盘之上，<br>认识一台石磨机。',
-                    hint='转动、放大，点选四组部件。<br>本轮先看造型，研磨动画尚未接入。', legend='<span>投料区：位置示意</span><span>出料方式待核实 · 暂无动画</span>',
+        copy = dict(number='02', title='两只石辊，一盘可可的变化。', subtitle='看清颗粒的变化，也分清可可浆与可可粉。',
+                    edition='研磨工序样板', version='V0.4', tag='从可可碎粒，到研磨原理', teaser='碎粒入盘，<br>慢慢磨成可可浆。',
+                    hint='主动播放 60 秒讲解，<br>可暂停观察，或逐步查看。', legend='<span>盘面／石辊：教学运动示意</span><span>非真实传动复原 · 不演示取料</span>',
                     detail='开口圆盘、双石辊、横梁与侧面机构参照实拍简化。点编号看部件；“工作区域示意”隐藏前盘壁，便于观察接触区，不表示真实设备可这样拆开。')
         materials = [('典型研磨输入', '经过焙炒、破碎脱壳的可可碎粒'), ('典型研磨结果', '可可浆／可可液块，并非脱脂可可粉'), ('这台展品的边界', '具体出料口、取料方式待核实')]
+    duration = scene['duration']
+    clock_end = f'{int(duration) // 60:02}:{int(duration) % 60:02}'
+    initial_material = '跟踪芯体 · 尚未涂层' if scene_id == 'enrobed' else '盘内物料 · 可可碎粒'
+    initial_step_ids = scene['phases'][0]['stepIds'] if animated else [step['id'] for step in scene['steps']]
+    step_links = ''.join(f'<a href="#step-{step["number"]}">正文第 {step["number"]} 步 · {escape(step["label"])} ↙</a>' for step in scene['steps'] if step['id'] in initial_step_ids)
+    motion_reference = '' if scene_id == 'enrobed' else '<a href="#source-stone-motion">现代石磨原理参照 ↙</a>'
+    comparison = '' if scene_id == 'enrobed' else '<div class="lab-grinding-comparison" aria-label="本段研磨前后对照"><div><span>研磨前</span><strong>可可碎粒</strong><small>颗粒清晰可辨</small></div><span aria-hidden="true">→</span><div><span>研磨后</span><strong>可可液块</strong><small>含细小固体的可可浆</small></div></div>'
     materials_html = '<span class="lab-material-arrow" aria-hidden="true">→</span>'.join(
         f'<div><span>{escape(label)}</span><strong>{escape(value)}</strong></div>' for label, value in materials
     )
@@ -39,17 +46,18 @@ def render_equipment_lab(scene_id='enrobed'):
         caption = scene['phases'][0]['caption']
         playback = f'''
       <div class="lab-playback" data-playback hidden>
-        <div class="lab-phase-list" aria-label="跳到工序关键帧">{phases}</div>
+        <div class="lab-phase-list" style="--phase-count:{len(scene['phases'])}" aria-label="跳到工序关键帧">{phases}</div>
         <div class="lab-transport"><button type="button" class="lab-play" data-play aria-pressed="false">▶ 播放工序</button><button type="button" data-restart>↺ 重播</button><div class="lab-step-buttons"><button type="button" data-previous aria-label="查看上一步">← 上一步</button><button type="button" data-next aria-label="查看下一步">下一步 →</button></div></div>
-        <div class="lab-progress"><label for="lab-seek">教学进度</label><input id="lab-seek" type="range" min="0" max="75" step="0.1" value="0" data-seek aria-label="教学动画进度，非真实加工时长"><output for="lab-seek" data-time aria-live="off">00:00 / 01:15</output></div>
-        <p class="lab-timing-note">75 秒为讲解编排，非真实加工时间。点工序看关键帧，拖动进度即暂停。</p>
+        <div class="lab-progress"><label for="lab-seek">教学进度</label><input id="lab-seek" type="range" min="0" max="{duration:g}" step="0.1" value="0" data-seek aria-label="教学动画进度，非真实加工时长"><output for="lab-seek" data-time aria-live="off">00:00 / {clock_end}</output></div>
+        <p class="lab-timing-note">{duration:g} 秒为讲解编排，非真实加工时间。点工序看关键帧，拖动进度即暂停。</p>
         <p class="lab-motion-hint" data-motion-hint hidden>已尊重减少动态效果偏好：默认静帧，可逐步查看，或主动播放。</p>
       </div>
 '''
         narration = f'''
-      <div class="lab-inspector-heading"><span>此刻，发生了什么</span><span class="lab-tiny-number">01—05</span></div>
-      <section class="lab-narration" aria-live="polite" aria-atomic="true"><h3 data-phase-title>01 / 认识两路输入</h3><dl><div><dt>进入</dt><dd data-caption-input>{escape(caption['input'])}</dd></div><div><dt>动作</dt><dd data-caption-action>{escape(caption['action'])}</dd></div><div><dt>得到</dt><dd data-caption-output>{escape(caption['output'])}</dd></div></dl><p class="lab-caption-note" data-caption-note>{escape(caption['note'])}</p><div class="lab-phase-references" data-phase-references></div></section>
-      <p class="lab-product-state" data-product-state>跟踪芯体 · 尚未涂层</p>
+      <div class="lab-inspector-heading"><span>此刻，发生了什么</span><span class="lab-tiny-number">01—{len(scene['phases']):02}</span></div>
+      <section class="lab-narration" aria-live="polite" aria-atomic="true"><h3 data-phase-title>01 / {escape(scene['phases'][0]['title'])}</h3><dl><div><dt>进入</dt><dd data-caption-input>{escape(caption['input'])}</dd></div><div><dt>动作</dt><dd data-caption-action>{escape(caption['action'])}</dd></div><div><dt>得到</dt><dd data-caption-output>{escape(caption['output'])}</dd></div></dl><p class="lab-caption-note" data-caption-note>{escape(caption['note'])}</p><div class="lab-phase-references" data-phase-references>{step_links}</div></section>
+      <p class="lab-product-state" data-product-state>{initial_material}</p>
+{comparison}
 '''
     else:
         step = scene['steps'][0]
@@ -77,7 +85,7 @@ def render_equipment_lab(scene_id='enrobed'):
       </div>
 {playback}
       <div class="lab-tools" data-view-controls hidden>
-        <div class="lab-modes" aria-label="设备展示方式"><button type="button" data-mode="working" aria-pressed="{str(animated).lower()}">{"工作部件示意" if animated else "工作区域示意"}</button><button type="button" data-mode="exterior" aria-pressed="{str(not animated).lower()}">完整外观</button></div>
+        <div class="lab-modes" aria-label="设备展示方式"><button type="button" data-mode="working" aria-pressed="{str(animated).lower()}">{"工作部件示意" if scene_id == "enrobed" else "工作区域示意"}</button><button type="button" data-mode="exterior" aria-pressed="{str(not animated).lower()}">完整外观</button></div>
         <div class="lab-views" aria-label="选择观察角度">
           <button type="button" data-view="perspective" aria-pressed="true">立体</button>
           <button type="button" data-view="front" aria-pressed="false">正面</button>
@@ -98,7 +106,7 @@ def render_equipment_lab(scene_id='enrobed'):
     </aside>
   </div>
   <div class="lab-materials">{materials_html}</div>
-  <p class="lab-boundary"><span>模型边界</span> {escape(scene['boundary'])}</p>
+  <p class="lab-boundary"><span>模型边界</span> {escape(scene['boundary'])}{' ' + motion_reference if motion_reference else ''}</p>
   <noscript><p class="lab-noscript">3D 需要 JavaScript；设备照片、展牌和下方全部工艺正文仍可阅读。</p></noscript>
 </section>
 '''

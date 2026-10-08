@@ -43,4 +43,4 @@
 
 ## 3D 设备观察室
 
-涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。石磨机模型由 `web/three/src/machines/stone-mill.ts` 生成，以照片 10／11 为造型参考；本版为静态结构样板，不补造出料口或隐藏传动。两场景共享查看器，未使用新增第三方图片或模型。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。
+涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。石磨机模型由 `web/three/src/machines/stone-mill.ts` 生成，以照片 10／11 为造型参考；V0.4 用代码绘制碎粒、浆态表面和典型研磨运动；盘面转动与石辊自转为教学约定，不证明本展品实际传动，不补造出料口。两场景共享查看器，未使用新增第三方图片或模型。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。

@@ -40,21 +40,36 @@ for phase in ENROBED_SCENE['phases']:
 
 STONE_MILL_SCENE = {
     'id': 'stone-mill', 'pageSlug': 'chocolate', 'schemaVersion': 1,
-    'status': 'static-prototype', 'name': '石磨机', 'duration': 0, 'phases': [],
+    'status': 'animated-prototype', 'name': '石磨机', 'duration': 60,
+    'phases': [
+        {'id': 'feeding', 'start': 0, 'end': 10, 'stepIds': ['nib-grinding'], 'title': '认识投料', 'evidence': 'schematic', 'refs': ['icco']},
+        {'id': 'crushing', 'start': 10, 'end': 28, 'stepIds': ['nib-grinding'], 'title': '反复碾磨', 'evidence': 'schematic', 'refs': ['icco', 'stone-motion']},
+        {'id': 'liquefying', 'start': 28, 'end': 46, 'stepIds': ['nib-grinding'], 'title': '形成浆态', 'evidence': 'reference', 'refs': ['icco']},
+        {'id': 'result', 'start': 46, 'end': 60, 'stepIds': ['nib-grinding'], 'title': '对照结果', 'evidence': 'reference', 'refs': ['icco']},
+    ],
     'stepIds': ['nib-grinding'],
     'photos': {'machine': 'assets/photos/10.jpg', 'plate': 'assets/photos/11.jpg'},
-    'boundary': '外形参照实拍 10／11；尺寸、背面和隐藏机构为简化示意。投料区域仅作提示，具体出料口、取料方式及石辊转向待核实。本版没有研磨动画，不把前侧机构认定为出料阀，也不演示压榨制粉。',
+    'boundary': '外形参照实拍 10／11；投料位置、盘面转动和双石辊自转均为教学运动示意，不代表这台展品的真实驱动形式、转向或速度。60 秒为讲解时间，非实际研磨时长；尺寸、颗粒大小与浆态变化不代表生产参数。本机具体出料口和取料方式待核实，不把前侧机构认定为出料阀，不演示取料、加水或压榨制粉。',
     'parts': [
         {'id': 'bowl', 'number': '01', 'name': '开口圆盘与盘壁', 'evidence': 'photo', 'refs': ['icco'],
          'description': '照片可见开口圆盘包围两只石辊。上方开口仅作为投料区示意；“工作区域示意”可隐藏前半盘壁，便于观察，不表示真实机器能这样拆开。'},
         {'id': 'stones', 'number': '02', 'name': '双石辊与接触区', 'evidence': 'photo', 'refs': ['icco'],
-         'description': '保留两只浅色厚石辊和水平连接轴的辨识特征。研磨原理在正文说明；本轮不推定石辊、料盘各自的转向或速度。'},
+         'description': '保留两只浅色厚石辊和水平连接轴的辨识特征。动画以盘面相对石辊运动、石辊自转说明反复碾磨，转向和速度是教学约定，不是对这台展品的传动复原。'},
         {'id': 'bridge', 'number': '03', 'name': '横梁、立柱与手柄', 'evidence': 'photo', 'refs': ['icco'],
          'description': '上方浅色横梁、棕色立柱、左侧手柄与中心连接参照照片简化。调节机构的内部结构和操作功能尚未核实，不将手柄做成可操作的生产控制。'},
         {'id': 'drive', 'number': '04', 'name': '底座与侧面机构', 'evidence': 'photo', 'refs': ['icco'],
          'description': '保留底座、左侧传动外形和前侧可见机构；不从外观推断隐藏齿轮。具体出料口和取料方式待核实，不补造出口或料流。'},
     ],
 }
+
+STONE_CAPTIONS = {
+    'feeding': ('经过焙炒、破碎脱壳的可可碎粒', '碎粒由上方开口落入盘内。投料位置只作示意，原料不是整颗带壳可可豆。', '等待研磨的可可碎粒', '播放本段只说明初步研磨，不演示烘焙、脱壳或加水。'),
+    'crushing': ('盘内仍有明显颗粒的可可碎粒', '盘面与石辊的相对运动使物料反复经过接触区，颗粒逐渐变细。', '逐渐细化的可可物料', '双辊自转与盘面运动是教学约定，不代表这台展品的实际转向、传动关系或速度。'),
+    'liquefying': ('逐渐细化的可可物料', '研磨破坏组织、释放可可脂，细小固体分散在脂肪中，物料逐渐呈浆态。', '含可可脂与非脂固体的可可浆', '不是加水化开，也不是把所有固体溶解；画面只表现典型形态变化，不模拟真实流体。'),
+    'result': ('经过研磨的可可物料', '定格观察：开始时是碎粒，现在是含细小固体的可可浆，也称可可液块。', '可供后续巧克力加工的可可液块', '结果仍留在盘内，取料方式未演示。它不等于脱脂可可粉，也不是可直接包装的成品巧克力。'),
+}
+for phase in STONE_MILL_SCENE['phases']:
+    phase['caption'] = dict(zip(('input', 'action', 'output', 'note'), STONE_CAPTIONS[phase['id']]))
 
 SCENES = {scene['id']: scene for scene in (ENROBED_SCENE, STONE_MILL_SCENE)}
 PAGE_SCENES = {'enrobed': 'enrobed', 'chocolate': 'stone-mill'}

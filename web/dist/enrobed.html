@@ -32,7 +32,7 @@
       </div>
 
       <div class="lab-playback" data-playback hidden>
-        <div class="lab-phase-list" aria-label="跳到工序关键帧"><button type="button" data-phase="inputs"><span>01</span>认识两路输入</button><button type="button" data-phase="coating"><span>02</span>经过涂层区</button><button type="button" data-phase="control"><span>03</span>控量与回收</button><button type="button" data-phase="cooling"><span>04</span>冷却定型</button><button type="button" data-phase="output"><span>05</span>检查输出</button></div>
+        <div class="lab-phase-list" style="--phase-count:5" aria-label="跳到工序关键帧"><button type="button" data-phase="inputs"><span>01</span>认识两路输入</button><button type="button" data-phase="coating"><span>02</span>经过涂层区</button><button type="button" data-phase="control"><span>03</span>控量与回收</button><button type="button" data-phase="cooling"><span>04</span>冷却定型</button><button type="button" data-phase="output"><span>05</span>检查输出</button></div>
         <div class="lab-transport"><button type="button" class="lab-play" data-play aria-pressed="false">▶ 播放工序</button><button type="button" data-restart>↺ 重播</button><div class="lab-step-buttons"><button type="button" data-previous aria-label="查看上一步">← 上一步</button><button type="button" data-next aria-label="查看下一步">下一步 →</button></div></div>
         <div class="lab-progress"><label for="lab-seek">教学进度</label><input id="lab-seek" type="range" min="0" max="75" step="0.1" value="0" data-seek aria-label="教学动画进度，非真实加工时长"><output for="lab-seek" data-time aria-live="off">00:00 / 01:15</output></div>
         <p class="lab-timing-note">75 秒为讲解编排，非真实加工时间。点工序看关键帧，拖动进度即暂停。</p>
@@ -54,8 +54,9 @@
     <aside class="lab-inspector" aria-label="工序讲解、部件说明与实拍对照">
 
       <div class="lab-inspector-heading"><span>此刻，发生了什么</span><span class="lab-tiny-number">01—05</span></div>
-      <section class="lab-narration" aria-live="polite" aria-atomic="true"><h3 data-phase-title>01 / 认识两路输入</h3><dl><div><dt>进入</dt><dd data-caption-input>已制好的饼干芯体 ＋ 准备好的巧克力料</dd></div><div><dt>动作</dt><dd data-caption-action>两路输入各司其职：网带接收芯体，供料管将巧克力送往涂层头。</dd></div><div><dt>得到</dt><dd data-caption-output>准备进入涂层区的芯体</dd></div></dl><p class="lab-caption-note" data-caption-note>这台机器不烤饼干；巧克力料的调温等准备在此前完成。</p><div class="lab-phase-references" data-phase-references></div></section>
+      <section class="lab-narration" aria-live="polite" aria-atomic="true"><h3 data-phase-title>01 / 认识两路输入</h3><dl><div><dt>进入</dt><dd data-caption-input>已制好的饼干芯体 ＋ 准备好的巧克力料</dd></div><div><dt>动作</dt><dd data-caption-action>两路输入各司其职：网带接收芯体，供料管将巧克力送往涂层头。</dd></div><div><dt>得到</dt><dd data-caption-output>准备进入涂层区的芯体</dd></div></dl><p class="lab-caption-note" data-caption-note>这台机器不烤饼干；巧克力料的调温等准备在此前完成。</p><div class="lab-phase-references" data-phase-references><a href="#step-1">正文第 1 步 · 芯体制备 ↙</a><a href="#step-2">正文第 2 步 · 涂层料准备 ↙</a></div></section>
       <p class="lab-product-state" data-product-state>跟踪芯体 · 尚未涂层</p>
+
 
       <details class="lab-parts-panel"><summary>设备部件与实拍对照 <span>04</span></summary>
       <div class="lab-part-list" aria-label="选择设备部件"><button type="button" class="lab-part" data-part="conveyor" aria-pressed="false" disabled><span>01</span>输送网带</button><button type="button" class="lab-part" data-part="coatingHead" aria-pressed="false" disabled><span>02</span>涂层头与料槽</button><button type="button" class="lab-part" data-part="blowerGuide" aria-pressed="false" disabled><span>03</span>吹风与控量区域</button><button type="button" class="lab-part" data-part="cabinet" aria-pressed="false" disabled><span>04</span>机柜与控制面板</button></div>

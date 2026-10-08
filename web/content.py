@@ -1,6 +1,7 @@
 """工艺内容。数字照片 ID 对应用户原文件中的序号。"""
 SOURCES = {
  'icco': ('国际可可组织 · 可可与巧克力加工', 'https://www.icco.org/processing-cocoa/'),
+ 'stone-motion': ('CocoaTown · 现代石磨原理参照（非本展品传动证明）', 'https://cocoatown.com/pages/melanger'),
  'harvest': ('国际可可组织 · 采收、发酵与干燥', 'https://www.icco.org/harvesting-post-harvest-new/'),
  'bean': ('Callebaut · 从可可豆到巧克力', 'https://www.callebaut.com/en/about-us/beantobar'),
  'conch': ('Bühler · 巧克力精炼技术', 'https://www.buhlergroup.com/global/en/process-technologies/Conching.html'),
@@ -44,7 +45,7 @@ PAGES = [dict(
  ],
  insights=[('黑、奶、白有什么不同？','黑巧以可可液块、糖、可可脂为基础；奶巧再引入乳成分；白巧使用可可脂、糖和乳成分，不加入可可液块。具体配方比例另定。'),('可可粉从哪里来？','可可液块可以直接去做巧克力，也可以分流压榨，得到可可脂与可可压饼；压饼再粉碎制粉。压榨不是每块巧克力的必经工序。'),('展牌信息要怎样读？','现代研究通常讨论六种可可脂晶型，调温的重要目标是合适的 V 型晶体；不能把“最稳定”简单理解为最适合巧克力生产。')],
  quiz=('五辊机已经把物料磨细，为什么还要精炼和调温？','它们解决三个不同问题：精磨细化固体颗粒，精炼改善风味和流动特性，调温管理可可脂的预结晶状态。'),
- related=['coins','enrobed','panned','filled'], sources=['harvest','icco','bean','conch','temper','crystal','cool','storage']
+ related=['coins','enrobed','panned','filled'], sources=['harvest','icco','stone-motion','bean','conch','temper','crystal','cool','storage']
 )]
 
 PAGES += [dict(
