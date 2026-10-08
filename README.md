@@ -22,6 +22,8 @@ python -X utf8 web/start_preview.py --stop
 
 ## 3D 设备互动样板
 
+V0.5 统一入口位于首页 [`index.html#animations`](web/dist/index.html#animations)：石磨机和涂层机各有实拍卡片，显示教学时长、阶段数、输入与结果。全站顶部“3D 动画”可返回专区；设备区可直接切换另一台设备，对应流程和正文也提供演示入口。首页不加载 three.js，进入设备页后仍需主动加载与播放。入口验收见 [`web/动画入口验收记录.md`](web/动画入口验收记录.md)。
+
 涂层巧克力页新增“设备观察室”：打开本地预览地址下的 `enrobed.html#equipment-3d`，点击“加载 3D 模型”，再点“播放工序”。75 秒教学动画展示两路输入、淋涂与底涂、控量回收、独立冷却及输出对照。支持暂停、重播、进度拖动、工序关键帧，以及旋转、缩放、部件说明和实拍对照。
 
 V0.4 为石磨机接入 60 秒研磨动画：打开 `chocolate.html#equipment-3d`，观看投料、反复碾磨、形成浆态和结果对照四个阶段。支持暂停、重播、拖动进度，以及原有旋转缩放、部件说明和照片 10／11 对照。盘面与石辊的运动是教学约定，不是展品真实传动复原；结果留在盘内，不虚构出料口。两台设备共享查看器，只加载当前设备模块。
@@ -52,6 +54,7 @@ python -X utf8 web/test_site.py
 | `photos/` | 34 张原始参观照片 |
 | `web/content.py` | 工艺步骤、照片映射与资料来源 |
 | `web/build.py` | 静态 HTML 生成器 |
+| `web/equipment_catalog.py` | 动画目录文案，时长及工序关联复用场景数据 |
 | `web/build_all.py`、`web/three/` | 3D 完整构建、程序化模型及查看器源码 |
 | `web/dist/` | 可直接阅读的完整网页与本地素材 |
 | `web/serve.py`、`web/start_preview.py` | 本地只读预览服务与启动器 |

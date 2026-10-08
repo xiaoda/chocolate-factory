@@ -20,6 +20,23 @@ class Document(HTMLParser):
             self.ids.append(attrs['id'])
 
 class SiteTests(unittest.TestCase):
+    def test_animation_directory_links(self):
+        home = (ROOT / 'index.html').read_text('utf-8')
+        if 'id="animations"' not in home:
+            self.skipTest('本次为纯图文构建')
+        from equipment_catalog import animation_entries
+        cards = [attrs for tag, attrs in Document(home).tags if tag == 'a' and attrs.get('class') == 'animation-card']
+        self.assertEqual({a['href'] for a in cards}, {entry['href'] for entry in animation_entries()})
+        self.assertNotIn('assets/three/', home)
+        for name in NAMES:
+            html = (ROOT / f'{name}.html').read_text('utf-8')
+            self.assertIn('href="index.html#animations"', html)
+        for entry in animation_entries():
+            text = (ROOT / f"{entry['pageSlug']}.html").read_text('utf-8')
+            switcher = text.split('<nav class="animation-switcher"', 1)[1].split('</nav>', 1)[0]
+            self.assertEqual(switcher.count('aria-current="page"'), 1)
+            self.assertEqual(text.count('class="step-animation-link"'), len(entry['stepIds']))
+
     def test_optional_three_integration(self):
         text = (ROOT / 'enrobed.html').read_text('utf-8')
         if 'id="equipment-3d"' not in text:

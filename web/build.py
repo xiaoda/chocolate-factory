@@ -6,6 +6,7 @@ import struct
 import argparse
 from three_markup import render_equipment_lab
 from scene_content import PAGE_SCENES
+from equipment_catalog import animation_entries
 from content import PAGES, SOURCES, REFERENCES
 
 HERE = Path(__file__).resolve().parent
@@ -66,16 +67,17 @@ def figure(key, caption, plate=None, hero=False):
     <a class="photo-link" href="{path}" data-lightbox data-caption="{e(caption, quote=True)}" aria-label="放大照片：{e(caption, quote=True)}">{image(key,caption,hero)}<span class="photo-label">{evidence}</span><span class="expand" aria-hidden="true">↗</span></a>
     <figcaption>{e(caption)}{credit}{plate_link}</figcaption></figure>'''
 
-def head(title, description, with_3d=False):
+def head(title, description, with_3d=False, with_animation_nav=False):
     extra = '<link rel="stylesheet" href="assets/three/viewer.css"><script type="module" src="assets/three/viewer.js"></script>' if with_3d else ''
+    animation_nav = '<a class="nav-animation" href="index.html#animations">3D 动画</a>' if with_animation_nav else ''
     return f'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{e(description,quote=True)}"><meta name="theme-color" content="#38251e">
 <title>{e(title)} · 可可工艺笔记</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script>{extra}</head><body>
 <a class="skip" href="#main">跳到正文</a><div class="reading-track" aria-hidden="true"><div id="reading-progress"></div></div>
-<header class="site-header"><div class="header-inner"><a class="brand" href="index.html" aria-label="可可工艺笔记首页"><span class="brand-mark" aria-hidden="true">可</span><span>可可工艺笔记<small>从博物馆，看懂制造</small></span></a>
-<nav aria-label="主导航"><a href="index.html#collection">工艺目录 <span aria-hidden="true">↗</span></a><a href="index.html#about">阅读说明</a></nav><span class="edition">参观照片图解 / 01</span></div></header>'''
+<header class="site-header{' has-animation-nav' if with_animation_nav else ''}"><div class="header-inner"><a class="brand" href="index.html" aria-label="可可工艺笔记首页"><span class="brand-mark" aria-hidden="true">可</span><span>可可工艺笔记<small>从博物馆，看懂制造</small></span></a>
+<nav aria-label="主导航"><a href="index.html#collection">工艺目录 <span aria-hidden="true">↗</span></a>{animation_nav}<a href="index.html#about">阅读说明</a></nav><span class="edition">参观照片图解 / 01</span></div></header>'''
 
 def foot():
     return '''<footer class="site-footer wrap"><div><a class="footer-brand" href="index.html">可可工艺笔记</a><p>从你的实拍出发，把机器连回产品。</p></div><p class="disclaimer">用于理解典型工艺，不是生产操作规程。<br>配方、食品安全控制与保质期须另行验证。</p><a class="backtop" href="#main">回到顶部 ↑</a></footer>
@@ -88,6 +90,15 @@ def source_links(keys):
 def detail(page, idx, with_3d=False):
     slug, name = page['slug'], page['name']
     steps = page['steps']
+    entry = next((x for x in animation_entries() if x['pageSlug'] == slug), None) if with_3d else None
+    animated_steps = set(entry['stepIds']) if entry else set()
+    def animation_link(step, compact=False):
+        if step.get('id') not in animated_steps:
+            return ''
+        css = 'flow-animation-link' if compact else 'step-animation-link'
+        label = '3D 演示 ↓' if compact else f'观看 3D 演示 · {entry["shortName"]} ↑'
+        accessible = f'观看{step["label"]}关联的{entry["shortName"]} 3D 演示'
+        return f'<a class="{css}" href="#equipment-3d" aria-label="{e(accessible, quote=True)}">{e(label)}</a>'
     step_html = []
     for n, step in enumerate(steps, 1):
         pic = figure(step['photo'], step['caption'], step.get('plate')) if 'photo' in step else ''
@@ -95,8 +106,8 @@ def detail(page, idx, with_3d=False):
         step_html.append(f'''<section class="step {'has-photo' if pic else 'text-step'}" id="step-{n}" aria-labelledby="step-title-{n}">
         <div class="step-number">{n:02}</div><div class="step-copy"><div class="eyebrow">{e(step['label'])} <span class="evidence">{marker}</span></div><h3 id="step-title-{n}">{e(step['title'])}</h3>
         <dl class="transformation"><div><dt>进入</dt><dd>{e(step['input'])}</dd></div><div><dt>得到</dt><dd>{e(step['output'])}</dd></div></dl>
-        <p>{e(step['action'])}</p><div class="takeaway"><strong>看懂这一点</strong><p>{e(step['why'])}</p></div><div class="source-short">{source_links(step.get('refs',[]))}</div></div>{pic}</section>''')
-    flow = ''.join(f'<li><a href="#step-{n}"><span>{n:02}</span>{e(s["label"])}</a></li>' for n,s in enumerate(steps,1))
+        <p>{e(step['action'])}</p><div class="takeaway"><strong>看懂这一点</strong><p>{e(step['why'])}</p></div>{animation_link(step)}<div class="source-short">{source_links(step.get('refs',[]))}</div></div>{pic}</section>''')
+    flow = ''.join(f'<li><a href="#step-{n}"><span>{n:02}</span>{e(s["label"])}</a>{animation_link(s, compact=True)}</li>' for n,s in enumerate(steps,1))
     sidenav = ''.join(f'<a href="#step-{n}"><span>{n:02}</span>{e(s["label"])}</a>' for n,s in enumerate(steps,1))
     insight = ''.join(f'<article><span class="insight-no">0{i}</span><h3>{e(t)}</h3><p>{e(b)}</p></article>' for i,(t,b) in enumerate(page['insights'],1))
     refhtml = ''.join(f'<li id="source-{k}"><a href="{SOURCES[k][1]}" target="_blank" rel="noopener noreferrer">{e(SOURCES[k][0])} ↗</a></li>' for k in page['sources'])
@@ -110,12 +121,14 @@ def detail(page, idx, with_3d=False):
     badge = '巧克力工艺' if page['category']=='chocolate' else '糖果工艺'
     enhanced = with_3d and slug in PAGE_SCENES
     lab = render_equipment_lab(PAGE_SCENES[slug]) if enhanced else ''
-    return head(name,page['summary'], enhanced) + f'''
+    animation_shortcut = '<a class="animation-hero-link" href="#equipment-3d">观看 3D 演示 ↓</a>' if entry else ''
+    animation_sidenav = '<a href="#equipment-3d">3D 设备动画</a>' if entry else ''
+    return head(name,page['summary'], enhanced, with_animation_nav=with_3d) + f'''
 <main id="main"><div class="wrap"><div class="breadcrumb"><a href="index.html">工艺总览</a><span>/</span><span>{idx+1:02} · {name}</span><button class="print-button" type="button" data-print>打印本页 ↗</button></div>
-<section class="detail-hero"><div class="hero-copy"><div class="eyebrow accent">工艺笔记 {idx+1:02} / {badge}</div><p class="product-label">{name} <span>— {page['kicker']}</span></p><h1>{page['title']}</h1><p class="lede">{page['summary']}</p><a class="button" href="#process">先看流程 <span aria-hidden="true">↓</span></a><span class="readtime">约 {page['minutes']} 分钟读懂</span></div>{figure(page['hero'],page['hero_caption'],hero=True)}</section>
+<section class="detail-hero"><div class="hero-copy"><div class="eyebrow accent">工艺笔记 {idx+1:02} / {badge}</div><p class="product-label">{name} <span>— {page['kicker']}</span></p><h1>{page['title']}</h1><p class="lede">{page['summary']}</p><a class="button" href="#process">先看流程 <span aria-hidden="true">↓</span></a><span class="readtime">约 {page['minutes']} 分钟读懂</span>{animation_shortcut}</div>{figure(page['hero'],page['hero_caption'],hero=True)}</section>
 <div class="material-strip"><div><span>从什么开始</span><strong>{page['ingredients']}</strong></div><div><span>最后得到什么</span><strong>{page['result']}</strong></div><div><span>一句话原理</span><strong>{page['principle']}</strong></div></div>
 <section class="process-summary" id="process"><div class="section-heading"><div><p class="eyebrow accent">先把顺序记住</p><h2>一眼看懂流程</h2></div><p>点击任一步，跳到图文解释 ↓</p></div><ol class="flow-list">{flow}</ol><p class="boundary"><strong>这张流程图的边界</strong>{page['boundary']}</p></section>
-{lab}<div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a>{sidenav}<a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
+{lab}<div class="reading-layout"><aside class="step-nav" aria-label="本页步骤"><p class="eyebrow">本页阅读路线</p><a href="#process">流程速览</a>{animation_sidenav}{sidenav}<a href="#knowledge">容易混淆的地方</a><a href="#sources">照片与参考资料</a><div class="nav-note">现场照片负责定位设备，<br>补充资料负责连接流程。</div></aside>
 <div class="article-body"><section id="steps"><div class="section-heading"><div><p class="eyebrow accent">跟着物料走一遍</p><h2>每一步，发生了什么？</h2></div></div>{''.join(step_html)}</section>
 <section class="knowledge" id="knowledge"><div class="section-heading"><div><p class="eyebrow accent">多懂一点</p><h2>容易混淆的地方</h2></div></div><div class="insight-grid">{insight}</div></section>
 <section class="self-check"><p class="eyebrow">30 秒自测</p><h2>{page['quiz'][0]}</h2><details><summary>想好了吗？展开答案</summary><p>{page['quiz'][1]}</p></details></section>
@@ -123,13 +136,28 @@ def detail(page, idx, with_3d=False):
 <section class="related"><p class="eyebrow">把工艺连起来</p><h2>接下来可以看</h2><div>{relatedhtml}</div></section></div></div>
 <nav class="chapter-nav" aria-label="相邻工艺">{prevlink}<a href="{nex['slug']}.html">下一篇 · {nex['name']} →</a></nav></div></main>''' + foot()
 
-def index():
+def animation_catalog():
+    cards = []
+    entries = animation_entries()
+    for entry in entries:
+        photo = image(int(Path(entry['photo']).stem), f'{entry["name"]}设备实拍，作为动画的外形参照')
+        cards.append(f'''<a class="animation-card" href="{entry['href']}" aria-labelledby="animation-{entry['id']}-title animation-{entry['id']}-action">
+<div class="animation-cover">{photo}<span class="animation-photo-tag">设备实拍 · 外形参照</span><span class="animation-duration">{entry['duration']:g} 秒 / {entry['phaseCount']} 阶段</span></div>
+<div class="animation-card-body"><p class="eyebrow">{entry['category']} / {entry['shortName']}</p><h3 id="animation-{entry['id']}-title">{entry['title']}</h3><p class="animation-description">{entry['description']}</p>
+<dl class="animation-materials"><div><dt>投入</dt><dd>{entry['input']}</dd></div><div><dt>得到</dt><dd>{entry['output']}</dd></div></dl>
+<span class="animation-card-action" id="animation-{entry['id']}-action">进入 {entry['shortName']} 3D 演示 <span aria-hidden="true">↗</span></span></div></a>''')
+    return f'''<section id="animations" class="animation-catalog" aria-labelledby="animations-title"><div class="section-heading"><div><p class="eyebrow accent">设备观察室 / {len(entries):02} 台已上线</p><h2 id="animations-title">3D 设备动画</h2></div><p>不只看机器，也看物料怎样改变。</p></div>
+<div class="animation-grid">{''.join(cards)}</div><div class="animation-catalog-note"><p>进入设备页 → 加载 3D 模型 → 主动播放；也可暂停、旋转或逐步查看。</p><p>典型原理示意，非展品真实传动复原。时长为教学编排，3D 请通过本地 HTTP 预览。</p></div></section>'''
+
+
+def index(with_3d=False):
     cards = []
     for n,p in enumerate(PAGES,1):
         cards.append(f'''<article class="process-card" data-category="{p['category']}"><a href="{p['slug']}.html" aria-label="阅读{p['name']}制作流程"><div class="card-image">{image(p['hero'],p['hero_caption'])}<span class="card-number">{n:02}</span><span class="card-arrow" aria-hidden="true">↗</span></div><div class="card-body"><p class="eyebrow">{'巧克力工艺' if p['category']=='chocolate' else '糖果工艺'} / {len(p['steps'])} 个环节</p><h3>{p['name']}</h3><p>{p['short']}</p><span class="card-link">阅读图解 <span aria-hidden="true">→</span></span></div></a></article>''')
-    return head('工艺总览','一条巧克力主线，八种产品分支。用博物馆实拍照片，看懂巧克力与糖果的制造流程。') + f'''
+    animations = animation_catalog() if with_3d else ''
+    return head('工艺总览','一条巧克力主线，八种产品分支。用博物馆实拍照片，看懂巧克力与糖果的制造流程。', with_animation_nav=with_3d) + f'''
 <main id="main"><div class="wrap"><section class="index-hero"><div class="hero-copy"><p class="eyebrow accent">一份从参观照片开始的工艺手册</p><h1>甜的背后，<br>是怎样一门工艺？</h1><p class="lede">从可可豆到巧克力，从一锅糖浆到一颗糖。<br class="desktop-break">沿着物料变化的方向，把你拍下的机器，<br class="desktop-break">串成看得懂的制作流程。</p><a class="button" href="chocolate.html">从基础巧克力开始 <span aria-hidden="true">↗</span></a><a class="text-link" href="#collection">直接选一种产品 ↓</a><div class="index-meta"><span><strong>09</strong> 条阅读路线</span><span><strong>实拍</strong> 设备与展牌</span><span><strong>图解</strong> 从原料到成品</span></div></div><div class="index-photo">{figure(8,'博物馆里的烘焙系统现场 · 让一台机器，回到它的工艺位置。',hero=True)}<span class="photo-stamp">现场观察<br><b>工艺再读</b></span></div></section>
-<section class="orientation" aria-labelledby="orientation-title"><div><p class="eyebrow">先建立一张地图</p><h2 id="orientation-title">不是一条长生产线，<br>而是几种不同的制造逻辑。</h2></div><ol><li><span>01</span><div><strong>巧克力：管理脂肪结晶</strong><p>磨细、精炼、调温，再走向不同形状。</p></div></li><li><span>02</span><div><strong>糖果：管理糖体状态</strong><p>按糖浆或糖体状态，选择模压、搅打或切块。</p></div></li><li><span>03</span><div><strong>奶片：让粉体受压成型</strong><p>不走巧克力调温，也不是硬糖熬煮。</p></div></li></ol></section>
+{animations}<section class="orientation" aria-labelledby="orientation-title"><div><p class="eyebrow">先建立一张地图</p><h2 id="orientation-title">不是一条长生产线，<br>而是几种不同的制造逻辑。</h2></div><ol><li><span>01</span><div><strong>巧克力：管理脂肪结晶</strong><p>磨细、精炼、调温，再走向不同形状。</p></div></li><li><span>02</span><div><strong>糖果：管理糖体状态</strong><p>按糖浆或糖体状态，选择模压、搅打或切块。</p></div></li><li><span>03</span><div><strong>奶片：让粉体受压成型</strong><p>不走巧克力调温，也不是硬糖熬煮。</p></div></li></ol></section>
 <section id="collection" class="collection"><div class="section-heading"><div><p class="eyebrow accent">选一种产品，跟着流程走</p><h2>九种工艺，各有路径。</h2></div><p>先读基础，再按兴趣分流。</p></div><div class="filter-bar"><div class="filters" aria-label="按工艺类别筛选"><button type="button" data-filter="all" aria-pressed="true">全部工艺 <span>09</span></button><button type="button" data-filter="chocolate" aria-pressed="false">巧克力 <span>05</span></button><button type="button" data-filter="candy" aria-pressed="false">糖果与奶片 <span>04</span></button></div><span class="filter-status" role="status" aria-live="polite">{len(PAGES)} 条阅读路线</span></div><div class="card-grid">{''.join(cards)}</div></section>
 <section id="about" class="about"><div><p class="eyebrow accent">关于这本图解手册</p><h2>看到的、补全的，<br>分开说清楚。</h2><p>照片是起点，不是工厂的完整档案。<br>不按拍摄顺序编排，而按物料流向讲解。</p></div><div class="about-notes"><article><span class="tag">你的实拍</span><h3>机器与展牌相互对照</h3><p>在对应步骤查看设备照片，点击放大；有清晰展牌的，附展牌入口。保留原图，不给未知设备硬贴身份。</p></article><article><span class="tag light">资料补全</span><h3>把照片之外的步骤接起来</h3><p>用行业组织和制造商资料解释未拍到的环节。补充图片标明作者与许可；各页末尾列出参考链接。</p></article><article><span class="tag light">阅读边界</span><h3>学原理，不照抄生产参数</h3><p>展示的是典型制作逻辑，不是特定工厂的设备配置或配方。原料、温度、时间和检验限值仍需专业验证。</p></article></div></section></div></main>''' + foot()
 
@@ -142,7 +170,7 @@ def build_site(with_3d=False):
     MANIFEST.clear()
     for idx, page in enumerate(PAGES):
         (OUT / f'{page["slug"]}.html').write_text(detail(page,idx,with_3d),encoding='utf-8')
-    (OUT / 'index.html').write_text(index(),encoding='utf-8')
+    (OUT / 'index.html').write_text(index(with_3d),encoding='utf-8')
     manifest = '# 图片来源与使用说明\n\n## 用户实拍\n\n原图位于项目 photos 文件夹，网页只复制，不改写原件。下表编号沿用原文件名。\n\n| 输出文件 | 原文件 |\n|---|---|\n'
     manifest += '\n'.join(f'| dist/assets/photos/{k:02}.jpg | {v} |' for k,v in sorted(MANIFEST.items()))
     manifest += '\n\n## 公网补充图\n\n均下载到本地用于离线阅读，未修改原始图像；页面可能通过 CSS 等比缩放/裁切展示，可打开完整原图。\n\n'

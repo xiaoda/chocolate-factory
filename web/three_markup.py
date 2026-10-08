@@ -2,6 +2,18 @@
 from html import escape
 from export_scene_data import build_scene_data
 from scene_content import SCENES
+from equipment_catalog import animation_entries
+
+
+def render_animation_switcher(scene_id):
+    links = ['<a class="animation-all" href="index.html#animations">← 全部动画</a>']
+    for entry in animation_entries():
+        current = entry['id'] == scene_id
+        href = '#equipment-3d' if current else entry['href']
+        selected = ' aria-current="page"' if current else ''
+        marker = '<small>正在看</small>' if current else '<span aria-hidden="true">↗</span>'
+        links.append(f'<a href="{escape(href, quote=True)}"{selected}>{escape(entry["shortName"])}{marker}</a>')
+    return '<nav class="animation-switcher" aria-label="切换 3D 设备动画">' + ''.join(links) + '</nav>'
 
 
 def render_equipment_lab(scene_id='enrobed'):
@@ -67,6 +79,7 @@ def render_equipment_lab(scene_id='enrobed'):
 '''
     return f'''
 <section id="equipment-3d" class="equipment-lab" aria-labelledby="lab-title" data-equipment-lab data-scene="{escape(scene_id, quote=True)}" data-state="idle">
+{render_animation_switcher(scene_id) if animated else ''}
   <header class="lab-heading">
     <div><p class="lab-kicker">设备观察室 <span>／ {copy['number']}</span></p><h2 id="lab-title">{copy['title']}</h2><p class="lab-subtitle">{copy['subtitle']}</p></div>
     <span class="lab-edition">{copy['edition']} <b>{copy['version']}</b></span>
