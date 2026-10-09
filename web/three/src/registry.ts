@@ -5,6 +5,7 @@ export async function loadScene(id: string): Promise<SceneDefinition> {
   switch (id) {
     case 'enrobed': return (await import('./scenes/enrobed-view')).enrobedScene;
     case 'stone-mill': return (await import('./scenes/stone-mill-view')).stoneMillScene;
+    case 'five-roll': return (await import('./scenes/five-roll-view')).fiveRollScene;
     default: throw new Error(`未知设备场景：${id}`);
   }
 }

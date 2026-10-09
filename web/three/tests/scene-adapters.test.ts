@@ -1,9 +1,13 @@
 import { expect, test } from 'vitest';
 import { loadScene } from '../src/registry';
 
-test('双设备保持独立播放器、标签和资源归属', async () => {
+test('三设备保持独立播放器、标签和资源归属', async () => {
   const stone = (await loadScene('stone-mill')).create();
   const enrobed = (await loadScene('enrobed')).create();
+  const five = (await loadScene('five-roll')).create();
+  expect(five.animation?.player.duration).toBe(60);
+  expect(five.animation?.player.playing).toBe(false);
+  expect(five.labels.map(label => label.id)).toEqual(['materialIn', 'film', 'result']);
   expect(stone.animation?.player.duration).toBe(60);
   expect(stone.labels.map(label => label.id)).toEqual(['materialIn', 'grinding', 'paste']);
   expect(stone.animation?.player.playing).toBe(false);
@@ -15,6 +19,14 @@ test('双设备保持独立播放器、标签和资源归属', async () => {
   stone.animation!.player.seek(60); stone.animation!.update();
   expect(stone.labels.find(label => label.id === 'paste')?.text).toContain('可可液块');
   expect(enrobed.animation?.player.time).toBe(42);
+  expect(five.animation?.player.time).toBe(0);
+  five.animation!.player.seek(45); five.animation!.update();
+  expect(five.labels[2].show).toBe(true);
+  expect(stone.animation?.player.time).toBe(60);
+  five.machine.selectPart('rollers'); five.dispose(); five.dispose();
+  expect(five.root.children).toHaveLength(0);
+  expect(stone.root.children.length).toBeGreaterThan(0);
+  expect(enrobed.root.children.length).toBeGreaterThan(0);
   stone.dispose(); enrobed.dispose();
   expect(stone.root.children).toHaveLength(0);
   expect(enrobed.root.children).toHaveLength(0);

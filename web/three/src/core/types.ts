@@ -13,6 +13,7 @@ export interface MachineInstance {
 }
 export interface EnroberInstance extends MachineInstance { setBeltOffset(offset: number): void }
 export interface StoneMillInstance extends MachineInstance { setGrindingAngle(angle: number): void }
+export interface FiveRollInstance extends MachineInstance { setRollAngles(angles: readonly number[]): void }
 export interface ViewerHandle { dispose(): void }
 
 export interface PartInfo { id: string; number: string; name: string; evidence: string; description: string }

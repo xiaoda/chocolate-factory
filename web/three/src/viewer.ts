@@ -52,6 +52,8 @@ export function mountViewer(lab: HTMLElement, definition: SceneDefinition, onFai
       if (node instanceof DirectionalLight) node.shadow.dispose();
     });
     renderer?.dispose();
+    // 切换设备时主动归还上下文；先移除监听器，避免主动释放触发失败 UI。
+    renderer?.forceContextLoss();
     host.replaceChildren();
     pinLayer.replaceChildren();
     [host, pinLayer, controlsElement, legend, gesture].forEach(element => { element.hidden = true; });
@@ -267,8 +269,14 @@ export function mountViewer(lab: HTMLElement, definition: SceneDefinition, onFai
     }
     on(document, 'visibilitychange', updateVisibility);
     const observer = new ResizeObserver(resize); observer.observe(host); cleanup.push(() => observer.disconnect());
-    const intersection = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; updateVisibility(); });
-    intersection.observe(host); cleanup.push(() => intersection.disconnect());
+    // 手机端侧面原理图在画布下方；任一教学画面可见即可继续同一时间轴。
+    const visibility = new Map<Element, boolean>();
+    const intersection = new IntersectionObserver(entries => {
+      entries.forEach(entry => visibility.set(entry.target, entry.isIntersecting));
+      visible = [...visibility.values()].some(Boolean); updateVisibility();
+    });
+    [host, ...lab.querySelectorAll('[data-animation-region]')].forEach(region => intersection.observe(region));
+    cleanup.push(() => intersection.disconnect());
     updateVisibility(); setView('perspective'); resize();
     return { dispose };
   } catch (error) {

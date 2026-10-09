@@ -16,7 +16,7 @@ class BuildIntegrationTests(unittest.TestCase):
                 build.build_site(with_3d=True)
             self.assertFalse((Path(tmp) / 'dist/enrobed.html').exists())
 
-    def test_two_devices_get_shared_viewer_and_existing_assets_survive(self):
+    def test_three_devices_get_shared_viewer_and_existing_assets_survive(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(build, 'OUT', Path(tmp) / 'dist'), patch.object(build, 'HERE', Path(tmp)):
             root = Path(tmp) / 'dist'
             (root / 'assets/three').mkdir(parents=True)
@@ -46,10 +46,17 @@ class BuildIntegrationTests(unittest.TestCase):
             self.assertIn('assets/photos/10.jpg', stone)
             self.assertIn('assets/photos/11.jpg', stone)
             self.assertIn('data-playback hidden', stone)
-            self.assertEqual(stone.count('data-phase="'), 4)
+            self.assertEqual(stone.count('data-phase="'), 9)
             self.assertIn('max="60"', stone)
             self.assertIn('00:00 / 01:00', stone)
             self.assertIn('60 秒为讲解编排', stone)
+            self.assertIn('data-scene="five-roll"', stone)
+            self.assertIn('id="equipment-five-roll"', stone)
+            self.assertIn('精磨工序样板', stone)
+            self.assertIn('data-roll-diagram data-animation-region hidden', stone)
+            self.assertEqual(stone.count('src="assets/three/viewer.js"'), 1)
+            step = stone.split('id="step-4"', 1)[1].split('</section>', 1)[0]
+            self.assertIn('class="step-animation-link" href="#equipment-five-roll"', step)
             self.assertEqual(sentinel.read_text('utf-8'), 'existing stylesheet')
 
     def test_plain_build_has_no_3d_dependency(self):

@@ -6,7 +6,7 @@ import struct
 import argparse
 from three_markup import render_equipment_lab
 from scene_content import PAGE_SCENES
-from equipment_catalog import animation_entries
+from equipment_catalog import equipment_entries
 from content import PAGES, SOURCES, REFERENCES
 
 HERE = Path(__file__).resolve().parent
@@ -69,7 +69,7 @@ def figure(key, caption, plate=None, hero=False):
 
 def head(title, description, with_3d=False, with_animation_nav=False):
     extra = '<link rel="stylesheet" href="assets/three/viewer.css"><script type="module" src="assets/three/viewer.js"></script>' if with_3d else ''
-    animation_nav = '<a class="nav-animation" href="index.html#animations">3D 动画</a>' if with_animation_nav else ''
+    animation_nav = '<a class="nav-animation" href="index.html#animations">3D 设备</a>' if with_animation_nav else ''
     return f'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{e(description,quote=True)}"><meta name="theme-color" content="#38251e">
@@ -90,15 +90,16 @@ def source_links(keys):
 def detail(page, idx, with_3d=False):
     slug, name = page['slug'], page['name']
     steps = page['steps']
-    entry = next((x for x in animation_entries() if x['pageSlug'] == slug), None) if with_3d else None
-    animated_steps = set(entry['stepIds']) if entry else set()
+    entries = [x for x in equipment_entries() if x['pageSlug'] == slug] if with_3d else []
     def animation_link(step, compact=False):
-        if step.get('id') not in animated_steps:
+        entry = next((x for x in entries if step.get('id') in x['stepIds']), None)
+        if not entry:
             return ''
         css = 'flow-animation-link' if compact else 'step-animation-link'
-        label = '3D 演示 ↓' if compact else f'观看 3D 演示 · {entry["shortName"]} ↑'
-        accessible = f'观看{step["label"]}关联的{entry["shortName"]} 3D 演示'
-        return f'<a class="{css}" href="#equipment-3d" aria-label="{e(accessible, quote=True)}">{e(label)}</a>'
+        kind = '演示' if entry['animated'] else '观察'
+        label = f'3D {kind} ↓' if compact else f'3D {kind} · {entry["shortName"]} ↑'
+        accessible = f'查看{step["label"]}关联的{entry["shortName"]} 3D {kind}'
+        return f'<a class="{css}" href="#{entry["anchor"]}" aria-label="{e(accessible, quote=True)}">{e(label)}</a>'
     step_html = []
     for n, step in enumerate(steps, 1):
         pic = figure(step['photo'], step['caption'], step.get('plate')) if 'photo' in step else ''
@@ -120,9 +121,9 @@ def detail(page, idx, with_3d=False):
     prevlink = f'<a href="{prev["slug"]}.html">← 上一篇 · {prev["name"]}</a>' if prev else '<a href="index.html">← 返回工艺总览</a>'
     badge = '巧克力工艺' if page['category']=='chocolate' else '糖果工艺'
     enhanced = with_3d and slug in PAGE_SCENES
-    lab = render_equipment_lab(PAGE_SCENES[slug]) if enhanced else ''
-    animation_shortcut = '<a class="animation-hero-link" href="#equipment-3d">观看 3D 演示 ↓</a>' if entry else ''
-    animation_sidenav = '<a href="#equipment-3d">3D 设备动画</a>' if entry else ''
+    lab = ''.join(render_equipment_lab(scene_id) for scene_id in PAGE_SCENES[slug]) if enhanced else ''
+    animation_shortcut = ''.join(f'<a class="animation-hero-link" href="#{entry["anchor"]}">{entry["shortName"]} · {"3D 动画" if entry["animated"] else "静态观察"} ↓</a>' for entry in entries)
+    animation_sidenav = ''.join(f'<a href="#{entry["anchor"]}">{entry["shortName"]} · {"3D 动画" if entry["animated"] else "静态观察"}</a>' for entry in entries)
     return head(name,page['summary'], enhanced, with_animation_nav=with_3d) + f'''
 <main id="main"><div class="wrap"><div class="breadcrumb"><a href="index.html">工艺总览</a><span>/</span><span>{idx+1:02} · {name}</span><button class="print-button" type="button" data-print>打印本页 ↗</button></div>
 <section class="detail-hero"><div class="hero-copy"><div class="eyebrow accent">工艺笔记 {idx+1:02} / {badge}</div><p class="product-label">{name} <span>— {page['kicker']}</span></p><h1>{page['title']}</h1><p class="lede">{page['summary']}</p><a class="button" href="#process">先看流程 <span aria-hidden="true">↓</span></a><span class="readtime">约 {page['minutes']} 分钟读懂</span>{animation_shortcut}</div>{figure(page['hero'],page['hero_caption'],hero=True)}</section>
@@ -138,16 +139,18 @@ def detail(page, idx, with_3d=False):
 
 def animation_catalog():
     cards = []
-    entries = animation_entries()
+    entries = equipment_entries()
     for entry in entries:
-        photo = image(int(Path(entry['photo']).stem), f'{entry["name"]}设备实拍，作为动画的外形参照')
+        photo = image(int(Path(entry['photo']).stem), f'{entry["name"]}设备实拍，作为三维模型的外形参照')
+        badge = f'{entry["duration"]:g} 秒 / {entry["phaseCount"]} 阶段' if entry['animated'] else '静态样板 · 暂无动画'
+        action = '3D 演示' if entry['animated'] else '结构观察'
         cards.append(f'''<a class="animation-card" href="{entry['href']}" aria-labelledby="animation-{entry['id']}-title animation-{entry['id']}-action">
-<div class="animation-cover">{photo}<span class="animation-photo-tag">设备实拍 · 外形参照</span><span class="animation-duration">{entry['duration']:g} 秒 / {entry['phaseCount']} 阶段</span></div>
+<div class="animation-cover">{photo}<span class="animation-photo-tag">设备实拍 · 外形参照</span><span class="animation-duration">{badge}</span></div>
 <div class="animation-card-body"><p class="eyebrow">{entry['category']} / {entry['shortName']}</p><h3 id="animation-{entry['id']}-title">{entry['title']}</h3><p class="animation-description">{entry['description']}</p>
-<dl class="animation-materials"><div><dt>投入</dt><dd>{entry['input']}</dd></div><div><dt>得到</dt><dd>{entry['output']}</dd></div></dl>
-<span class="animation-card-action" id="animation-{entry['id']}-action">进入 {entry['shortName']} 3D 演示 <span aria-hidden="true">↗</span></span></div></a>''')
-    return f'''<section id="animations" class="animation-catalog" aria-labelledby="animations-title"><div class="section-heading"><div><p class="eyebrow accent">设备观察室 / {len(entries):02} 台已上线</p><h2 id="animations-title">3D 设备动画</h2></div><p>不只看机器，也看物料怎样改变。</p></div>
-<div class="animation-grid">{''.join(cards)}</div><div class="animation-catalog-note"><p>进入设备页 → 加载 3D 模型 → 主动播放；也可暂停、旋转或逐步查看。</p><p>典型原理示意，非展品真实传动复原。时长为教学编排，3D 请通过本地 HTTP 预览。</p></div></section>'''
+<dl class="animation-materials"><div><dt>典型输入</dt><dd>{entry['input']}</dd></div><div><dt>典型结果</dt><dd>{entry['output']}</dd></div></dl>
+<span class="animation-card-action" id="animation-{entry['id']}-action">进入 {entry['shortName']} {action} <span aria-hidden="true">↗</span></span></div></a>''')
+    return f'''<section id="animations" class="animation-catalog" aria-labelledby="animations-title"><div class="section-heading"><div><p class="eyebrow accent">设备观察室 / {len(entries):02} 台设备 · {sum(x['animated'] for x in entries):02} 套动画</p><h2 id="animations-title">3D 设备与动画</h2></div><p>看机器的结构，也看物料的变化。</p></div>
+<div class="animation-grid">{''.join(cards)}</div><div class="animation-catalog-note"><p>进入设备页 → 加载模型 → 旋转观察；三台设备均可主动播放工序动画。</p><p>五辊机附同步侧面原理图。动画为典型原理示意，非展品真实传动复原；3D 请通过本地 HTTP 预览。</p></div></section>'''
 
 
 def index(with_3d=False):
@@ -177,12 +180,12 @@ def build_site(with_3d=False):
     for ref in REFERENCES.values():
         manifest += f'- `dist/assets/reference/{ref["file"]}`：{ref["title"]}；作者：{ref["author"]}；许可：{ref["license"]}；[原始文件与许可说明]({ref["url"]})。\n'
     if with_3d:
-        manifest += '\n## 3D 设备观察室\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。石磨机模型由 `web/three/src/machines/stone-mill.ts` 生成，以照片 10／11 为造型参考；V0.4 用代码绘制碎粒、浆态表面和典型研磨运动；盘面转动与石辊自转为教学约定，不证明本展品实际传动，不补造出料口。两场景共享查看器，未使用新增第三方图片或模型。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
+        manifest += '\n## 3D 设备观察室\n\n涂层机模型由 `web/three/src/machines/enrober.ts` 的程序化几何体生成，以用户照片 25／26 为造型参考；没有使用 Blender、第三方机器模型或上传照片。尺寸、背面和隐藏连接为简化示意。物料、全包覆、回流和独立冷却段由代码绘制，用于典型原理讲解，不证明实拍设备的具体配置。石磨机模型由 `web/three/src/machines/stone-mill.ts` 生成，以照片 10／11 为造型参考；V0.4 用代码绘制碎粒、浆态表面和典型研磨运动；盘面转动与石辊自转为教学约定，不证明本展品实际传动，不补造出料口。五辊精磨机由 `web/three/src/machines/five-roll.ts` 生成，以照片 19／20 为造型参考；V0.7 保留已确认的五辊、立架、顶部电机与面板造型，辊径和布局不是测量结果。用代码叠加 60 秒典型精磨动画：相邻辊反向、逐级传料与颗粒细化；相对速度、料膜厚度和颗粒大小仅为教学约定，不对应真实参数。侧面 SVG 原理图与 3D 共用时间状态，不是展品剖面；刮取和粉片状结果只在小图示意，不向机器补造刮刀或出料口。金色短线是运动标记；蓝色光纹不作料流依据。完整外观隐藏教学叠加，辊组观察隐藏局部罩体，不代表实际拆卸；仪表不绑定生产控制。原理依据为 EP1165239B1 与制造商资料，链接见正文来源。三台设备共享查看器，同页切换释放旧实例；未使用新增第三方图片或模型。three.js 及其附加组件的许可随构建保存在 `dist/assets/three/THIRD_PARTY_LICENSES.md`。\n'
     (HERE / 'ASSETS.md').write_text(manifest,encoding='utf-8')
     print(f'已生成 {len(PAGES)+1} 个 HTML；使用 {len(MANIFEST)} 张实拍。')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--with-3d', action='store_true', help='插入已构建的静态 3D 样板')
+    parser.add_argument('--with-3d', action='store_true', help='插入已构建的 3D 设备观察室')
     build_site(parser.parse_args().with_3d)

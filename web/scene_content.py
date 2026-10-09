@@ -71,5 +71,40 @@ STONE_CAPTIONS = {
 for phase in STONE_MILL_SCENE['phases']:
     phase['caption'] = dict(zip(('input', 'action', 'output', 'note'), STONE_CAPTIONS[phase['id']]))
 
-SCENES = {scene['id']: scene for scene in (ENROBED_SCENE, STONE_MILL_SCENE)}
-PAGE_SCENES = {'enrobed': 'enrobed', 'chocolate': 'stone-mill'}
+FIVE_ROLL_SCENE = {
+    'id': 'five-roll', 'pageSlug': 'chocolate', 'schemaVersion': 1,
+    'status': 'animated-prototype', 'name': '五辊精磨机', 'duration': 60,
+    'phases': [
+        {'id': 'premix', 'start': 0, 'end': 10, 'stepIds': ['roller-refining'], 'title': '认识预混料', 'evidence': 'reference', 'refs': ['bean', 'roll-principle']},
+        {'id': 'nip', 'start': 10, 'end': 22, 'stepIds': ['roller-refining'], 'title': '辊隙与转向', 'evidence': 'schematic', 'refs': ['roll-principle']},
+        {'id': 'transfer', 'start': 22, 'end': 40, 'stepIds': ['roller-refining'], 'title': '逐级传料', 'evidence': 'schematic', 'refs': ['roll-principle']},
+        {'id': 'scraping', 'start': 40, 'end': 50, 'stepIds': ['roller-refining'], 'title': '顶部刮取', 'evidence': 'schematic', 'refs': ['roll-principle', 'roll-refiner']},
+        {'id': 'refined', 'start': 50, 'end': 60, 'stepIds': ['roller-refining'], 'title': '结果对照', 'evidence': 'reference', 'refs': ['roll-principle', 'roll-refiner']},
+    ],
+    'stepIds': ['roller-refining'],
+    'photos': {'machine': 'assets/photos/19.jpg', 'plate': 'assets/photos/20.jpg'},
+    'boundary': '外形参照实拍 19／20；尺寸与辊位非测量复原。辊向、相对速度、料膜与金色运动标记均为典型原理示意，不证明展品真实传动；60 秒是教学编排，膜厚、颗粒大小不是生产参数。侧面图不是展品剖面，刮取只在小图示意，不向模型补造出料口；蓝色光纹不作料流依据。“完整外观”隐藏教学叠加但不改变进度；局部罩体隐藏不代表真实拆卸。粉片状精磨料不是脱脂可可粉，也不是成品巧克力。',
+    'parts': [
+        {'id': 'rollers', 'number': '01', 'name': '五根辊筒', 'evidence': 'photo', 'refs': ['bean'],
+         'description': '保留五根水平辊筒和下部错位的已确认外形。相邻辊反向与逐级传料演示典型原理；金色短线帮助看清运动，不是辊面真实纹理，速度和辊隙不是生产参数。'},
+        {'id': 'frame', 'number': '02', 'name': '立架与底框', 'evidence': 'photo', 'refs': ['bean'],
+         'description': '浅色左右立架和底部横框参照照片保留。上部横挡可在“辊组观察”中隐藏，仅帮助看清辊筒，不表示真实设备可以这样拆卸。'},
+        {'id': 'drive', 'number': '03', 'name': '顶部电机与侧罩', 'evidence': 'photo', 'refs': ['bean'],
+         'description': '保留左上深色电机、散热筋和浅色侧罩的外形。罩内传动关系不可从照片确认，因此不补画齿轮、传动带或内部连接。'},
+        {'id': 'controls', 'number': '04', 'name': '仪表与控制面板', 'evidence': 'photo', 'refs': ['bean'],
+         'description': '右侧竖长仪表面板和左侧小面板作外观简化。仪表没有真实读数，按钮不能操作，不提供生产参数或设备操作指引。'},
+    ],
+}
+
+FIVE_ROLL_CAPTIONS = {
+    'premix': ('按配方预混、适合辊式精磨的混合料', '示意料团进入底部双辊区域，准备被带成料膜。', '等待精磨的预混料', '不是整颗可可豆，也不是把石磨可可浆直接当作已配料的巧克力。'),
+    'nip': ('底部双辊间的预混料', '相邻辊反向运动，接触区形成挤压与剪切；金色短线只帮助识别辊筒运动。', '随辊面传递的物料薄层', '转向与相对速度是典型原理示意，不复原展品驱动，也不提供调机参数。'),
+    'transfer': ('附着在辊面上的料膜', '物料逐级转到后续辊筒，经过接触区细化；前后交替的路径可在侧面小图中看清。', '颗粒逐渐细化的混合料', '料膜厚度与固体颗粒大小是不同概念；画面只定性示意，不把膜厚当作粒度读数。'),
+    'scraping': ('到达第五辊的精磨料膜', '侧面原理图示意把顶部料膜刮下，并收集为粉片状精磨料。', '等待后续加工的精磨混合料', '刮取位置只在小图说明典型原理，不证明展品的实际刮刀、出料口或输送配置。'),
+    'refined': ('经过辊式精磨的混合料', '对照可见：固体颗粒变细，但并未全部溶解。', '颗粒更细、仍需精炼等后续处理的混合料', '粉片状精磨料仍含脂肪与配方组分，不是脱脂可可粉，也不是可直接包装的成品巧克力。'),
+}
+for phase in FIVE_ROLL_SCENE['phases']:
+    phase['caption'] = dict(zip(('input', 'action', 'output', 'note'), FIVE_ROLL_CAPTIONS[phase['id']]))
+
+SCENES = {scene['id']: scene for scene in (ENROBED_SCENE, STONE_MILL_SCENE, FIVE_ROLL_SCENE)}
+PAGE_SCENES = {'enrobed': ('enrobed',), 'chocolate': ('stone-mill', 'five-roll')}

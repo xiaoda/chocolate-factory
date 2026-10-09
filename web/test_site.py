@@ -24,18 +24,19 @@ class SiteTests(unittest.TestCase):
         home = (ROOT / 'index.html').read_text('utf-8')
         if 'id="animations"' not in home:
             self.skipTest('本次为纯图文构建')
-        from equipment_catalog import animation_entries
+        from equipment_catalog import equipment_entries
         cards = [attrs for tag, attrs in Document(home).tags if tag == 'a' and attrs.get('class') == 'animation-card']
-        self.assertEqual({a['href'] for a in cards}, {entry['href'] for entry in animation_entries()})
+        self.assertEqual({a['href'] for a in cards}, {entry['href'] for entry in equipment_entries()})
         self.assertNotIn('assets/three/', home)
         for name in NAMES:
             html = (ROOT / f'{name}.html').read_text('utf-8')
             self.assertIn('href="index.html#animations"', html)
-        for entry in animation_entries():
+        for entry in equipment_entries():
             text = (ROOT / f"{entry['pageSlug']}.html").read_text('utf-8')
-            switcher = text.split('<nav class="animation-switcher"', 1)[1].split('</nav>', 1)[0]
+            panel = text.split(f'id="{entry["anchor"]}"', 1)[1]
+            switcher = panel.split('<nav class="animation-switcher"', 1)[1].split('</nav>', 1)[0]
             self.assertEqual(switcher.count('aria-current="page"'), 1)
-            self.assertEqual(text.count('class="step-animation-link"'), len(entry['stepIds']))
+            self.assertEqual(text.count('class="step-animation-link"'), sum(len(x['stepIds']) for x in equipment_entries() if x['pageSlug'] == entry['pageSlug']))
 
     def test_optional_three_integration(self):
         text = (ROOT / 'enrobed.html').read_text('utf-8')
@@ -51,7 +52,9 @@ class SiteTests(unittest.TestCase):
         self.assertIn('研磨工序样板', stone)
         self.assertNotIn('研磨动画尚未接入', stone)
         self.assertIn('data-playback hidden', stone)
-        self.assertEqual(stone.count('data-phase="'), 4)
+        self.assertEqual(stone.count('data-phase="'), 9)
+        self.assertIn('data-scene="five-roll"', stone)
+        self.assertIn('data-roll-diagram data-animation-region hidden', stone)
         self.assertIn('max="60"', stone)
         self.assertIn('href="#step-3"', stone)
         folder = ROOT / 'assets/three'

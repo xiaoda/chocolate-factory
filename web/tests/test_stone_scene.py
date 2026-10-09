@@ -36,5 +36,5 @@ class StoneSceneTests(unittest.TestCase):
     def test_all_scene_export(self):
         with tempfile.TemporaryDirectory() as tmp:
             paths = export_scenes(Path(tmp))
-            self.assertEqual({p.name for p in paths}, {'enrobed.json', 'stone-mill.json'})
+            self.assertEqual({p.name for p in paths}, {'enrobed.json', 'stone-mill.json', 'five-roll.json'})
             self.assertEqual(json.loads((Path(tmp) / 'enrobed.json').read_text('utf-8'))['duration'], 75)
